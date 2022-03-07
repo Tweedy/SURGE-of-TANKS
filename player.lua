@@ -11,6 +11,9 @@ player.speed = 0
 player.angle = 0
 player.angleCannon = 0
 player.old_angleCannon = 0
+player.nextPosX = nil
+player.nextPosY = nil
+
 
 function player.update(dt)
     player.x = player.x + (player.speed * dt) * math.cos(player.angle)
@@ -23,6 +26,12 @@ function player.update(dt)
     elseif player.speed < 0 then
         player.speed = player.speed + 100 * dt
     end
+end
+
+function player.GetNextPos(dt) -- Recupère la prochaine position du joueur
+    player.nextPosX = player.x + (player.speed * dt) * math.cos(player.angle)
+    player.nextPosY = player.y + (player.speed * dt) * math.sin(player.angle)
+    return player.nextPosX, player.nextPosY
 end
 
 function player.accelerate(pAccel)
@@ -44,6 +53,7 @@ function player.draw()
     love.graphics.draw(imgPlayerCannon, player.x, player.y, player.angleCannon - math.pi * 1.5, 1, 1, imgPlayerCannon:getWidth()/2, imgPlayerCannon:getHeight())
     if STATS_DEBUG == true then
         love.graphics.print(player.speed, player.x + 30, player.y)
+        love.graphics.print(player.x..","..player.y, player.x + 30, player.y + 16)
     end
 end
 

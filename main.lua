@@ -14,6 +14,8 @@ if arg[#arg] == "-debug" then require("mobdebug").start() end
 local mouseX = 0
 local mouseY = 0
 
+local old_playerPosX = nil
+local old_playerPosY = nil
 
 -- Modules
 local thePlayer = require("player")
@@ -28,6 +30,7 @@ function InitGame() -- Pour la remise à zéro de la partie
   thePlayer.x = LARGEUR_ECRAN /2
   thePlayer.y = HAUTEUR_ECRAN - 100
   thePlayer.angle = math.pi * 1.5
+  thePlayer.angleCannon = math.pi * 1.5
 end
 -----------------------------------------------------------------------------------------------------------
 ------------------------------------------- LOAD ----------------------------------------------------------
@@ -52,11 +55,11 @@ function UpdateJeu(dt)
   end
   
   if love.keyboard.isDown("z") then
-    thePlayer.accelerate(300*dt)
+      thePlayer.accelerate(300*dt)
   elseif love.keyboard.isDown("s") then
       thePlayer.accelerate(-300*dt)
   end
-
+  love.mouse.isVisible()
   function love.mousemoved(pX, pY) -- Donne la position du curseur au canon du tank joueur
     if PAUSE == false then
       thePlayer.angleCannon = math.angle(thePlayer.x,thePlayer.y,pX,pY)
@@ -71,7 +74,30 @@ function UpdateJeu(dt)
 
   thePlayer.update(dt)
   bullets.update(dt)
+
+  -- Determine avec quels elements le joueur peut collisionner
+  local next_x, next_y = thePlayer.GetNextPos(dt)
+  if thePlayer.nextPosX > LARGEUR_ECRAN - 20 then
+    thePlayer.x = LARGEUR_ECRAN - 20
+    thePlayer.vitesse = 0
+  end
+  if thePlayer.nextPosX < 20 then
+    thePlayer.x = 20
+    thePlayer.vitesse = 0
+  end
+  if thePlayer.nextPosY > HAUTEUR_ECRAN  - 20 then
+      thePlayer.y = HAUTEUR_ECRAN - 20
+      thePlayer.vitesse = 0
+  end
+  if thePlayer.nextPosY < 20 then
+    thePlayer.y = 20
+    thePlayer.vitesse = 0
 end
+end
+
+
+-- Méthode 1 : L'objet me donne les infos pour que je fasse le taf
+
 
 function love.update(dt)
   if PAUSE == false then
@@ -98,7 +124,15 @@ function love.keypressed(key)
     PAUSE = not PAUSE
   end
 
-  if key == "space" then -- Tire une balle en direction du curseur
+  if key == "a" then
+    STATS_DEBUG = not STATS_DEBUG
+  end
+  print(key)
+
+end
+
+function love.mousepressed(x, y, button)
+  if button == 1 then -- Tire une balle en direction du curseur
     local vx,vy
           local angle
           angle = math.angle(thePlayer.x,thePlayer.y,mouseX,mouseY)
@@ -106,11 +140,4 @@ function love.keypressed(key)
           vy = 10 * math.sin(angle)
     CreeTir(thePlayer.x + vx*5,thePlayer.y + vy*5,thePlayer.angleCannon, vx, vy)
   end
-
-  if key == "a" then
-    STATS_DEBUG = not STATS_DEBUG
-  end
-  print(key)
-  
 end
-  
