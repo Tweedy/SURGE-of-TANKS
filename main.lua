@@ -10,10 +10,11 @@ if arg[#arg] == "-debug" then require("mobdebug").start() end
 -- Variables
 local lstSprites = {}
 
-local timerMachineGun = 0
-
 local mouseX = 0
 local mouseY = 0
+
+local timerMachineGun = 0
+
 
 -- Modules
 local myPlayer = require("player")
@@ -62,16 +63,16 @@ function UpdateJeu(dt)
   end
   love.mouse.isVisible()
   function love.mousemoved(pX, pY) -- Donne la position du curseur au canon du tank joueur
-    if params.pause == false then
-      myPlayer.angleCannon = math.angle(myPlayer.x,myPlayer.y,pX,pY)
-    else
-      myPlayer.old_angleCannon = myPlayer.angleCannon
-      myPlayer.angleCannon = myPlayer.old_angleCannon
-    end
     mouseX = pX
     mouseY = pY
   end
-
+  if params.pause == false then
+    myPlayer.angleCannon = math.angle(myPlayer.x,myPlayer.y,mouseX,mouseY)
+  else
+    myPlayer.old_angleCannon = myPlayer.angleCannon
+    myPlayer.angleCannon = myPlayer.old_angleCannon
+  end
+  myPlayer.update(dt)
   if timerMachineGun <= 0 then
     if love.mouse.isDown(2) then -- Tire une balle en direction du curseur
       local vx,vy
@@ -87,16 +88,17 @@ function UpdateJeu(dt)
 
       CreeTirBalles(x1, y1, myPlayer.angle, vx, vy, lstSprites)
       CreeTirBalles(x2, y2, myPlayer.angle, vx, vy, lstSprites)
-          timerMachineGun = 50
-          myPlayer.mGunY = -12
-        end
-    else
-      myPlayer.mGunY = -14
+      timerMachineGun = 50
+      myPlayer.mGunX = myPlayer.x - 15 * math.cos(myPlayer.angle - math.pi)
+      myPlayer.mGunY = myPlayer.y - 15 * math.sin(myPlayer.angle - math.pi)
     end
+  else
+     myPlayer.mGunX = myPlayer.x - 12 * math.cos(myPlayer.angle - math.pi)
+    myPlayer.mGunY = myPlayer.y - 12 * math.sin(myPlayer.angle - math.pi)
+  end
   timerMachineGun = timerMachineGun - 10 * (60 * dt)
-  print(timerMachineGun)
+  
 
-  myPlayer.update(dt)
   bullets.update(dt)
 
   -- Determine avec quels elements le joueur peut collisionner
@@ -116,12 +118,8 @@ function UpdateJeu(dt)
   if myPlayer.nextPosY < 20 then
     myPlayer.y = 20
     myPlayer.vitesse = 0
+  end
 end
-end
-
-
-myPlayer.AngleTirX = 4 * math.cos(myPlayer.angleCannon)
-myPlayer.AngleTirY = 4 * math.sin(myPlayer.angleCannon)
 
 -- Méthode 1 : L'objet me donne les infos pour que je fasse le taf
 

@@ -14,7 +14,8 @@ player.angleCannon = 0
 player.old_angleCannon = 0
 player.nextPosX = nil
 player.nextPosY = nil
-player.mGunY = -14
+player.mGunX = nil
+player.mGunY = nil
 
 
 function player.update(dt)
@@ -28,6 +29,10 @@ function player.update(dt)
     elseif player.speed < 0 then
         player.speed = player.speed + 100 * dt
     end
+
+    -- Donne et actualise la position des mitrailleuses
+    player.mGunX = player.x - 14 * math.cos(player.angle - math.pi)
+    player.mGunY = player.y - 14 * math.sin(player.angle - math.pi)
 end
 
 function player.GetNextPos(dt) -- Recupère la prochaine position du joueur
@@ -55,7 +60,8 @@ end
 function player.draw()
     love.graphics.draw(imgPlayerTank, player.x, player.y, player.angle - math.pi * 1.5, 0.5, 0.5, imgPlayerTank:getWidth()/2, imgPlayerTank:getHeight()/2)
     love.graphics.draw(imgPlayerTracks, player.x, player.y, player.angle - math.pi * 1.5, 0.5, 0.5, imgPlayerTracks:getWidth()/2, imgPlayerTracks:getHeight()/2)
-    love.graphics.draw(imgPlayerMachineGun, player.x, player.y + player.mGunY, player.angle - math.pi * 1.5, 0.5, 0.5, imgPlayerMachineGun:getWidth()/2, imgPlayerMachineGun:getHeight()/2)
+
+    love.graphics.draw(imgPlayerMachineGun, player.mGunX, player.mGunY, player.angle - math.pi * 1.5, 0.5, 0.5, imgPlayerMachineGun:getWidth()/2, imgPlayerMachineGun:getHeight()/2)
     love.graphics.draw(imgPlayerCannon, player.x, player.y, player.angleCannon - math.pi * 1.5, 0.5, 0.5, imgPlayerCannon:getWidth()/2, imgPlayerCannon:getHeight())
     if params.stats_debug == true then
         love.graphics.print("Vitesse: "..player.speed, player.x + 30, player.y)
