@@ -1,7 +1,7 @@
 local params = {}
 
-  PAUSE = false
-  STATS_DEBUG = false
+params.pause = false
+params.stats_debug = false
 
   
 
