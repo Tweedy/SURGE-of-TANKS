@@ -4,7 +4,6 @@ local moduleCreateSprites = {}
 function CreateSprite(pList, pType, psImageFile, pnFrames)
     local mySprite = {}
     mySprite.type = pType
-    mySprite.visible = true
     
     mySprite.images = {}
     mySprite.currentFrame = 1

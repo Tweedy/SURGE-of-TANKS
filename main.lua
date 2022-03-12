@@ -75,15 +75,21 @@ function UpdateJeu(dt)
       myPlayer.accelerate(-300*dt)
   end
   love.mouse.isVisible()
-  function love.mousemoved(pX, pY) -- Donne la position du curseur au canon du tank joueur
+  function love.mousemoved(pX, pY) -- Donne la position du curseur au canon du tank joueurqqss
     mouseX = pX
     mouseY = pY
   end
   if params.pause == false then
     myPlayer.angleCannon = math.angle(myPlayer.x,myPlayer.y,mouseX,mouseY)
+    for k,v in pairs (theEnemys.lstGreenTank) do
+      v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
+    end
   else
     myPlayer.old_angleCannon = myPlayer.angleCannon
-    myPlayer.angleCannon = myPlayer.old_angleCannon
+    for k,v in pairs (theEnemys.lstGreenTank) do
+      v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
+      myPlayer.old_angleCannon = v.tourelleAngle
+    end
   end
   myPlayer.update(dt)
   if timerMachineGun <= 0 then
@@ -192,12 +198,15 @@ function love.draw()
 
   -- Affiche les informations de degugage
   if params.stats_debug == true then
-    love.graphics.print("Vitesse: "..myPlayer.speed, myPlayer.x + 30, myPlayer.y)
-    love.graphics.print("X: "..math.floor(myPlayer.x)..", Y: "..math.floor(myPlayer.y), myPlayer.x + 30, myPlayer.y + 16)
-    love.graphics.print("Angle: "..myPlayer.angle, myPlayer.x + 30, myPlayer.y + 32)
+    love.graphics.print("Vitesse: "..myPlayer.speed, myPlayer.x + 30, myPlayer.y -5)
+    love.graphics.print("X: "..math.floor(myPlayer.x)..", Y: "..math.floor(myPlayer.y), myPlayer.x + 30, myPlayer.y + 10)
+    love.graphics.print("Angle: "..myPlayer.angle, myPlayer.x + 30, myPlayer.y -20)
     love.graphics.print("Nb de sprites : "..#lstSprites, 10,10)
     love.graphics.print("Nb de tanks vert: "..#theEnemys.lstGreenTank, 10,25)
     love.graphics.print("Nb de balles': "..#bullets.liste_tirs, 10,40)
+    for k,v in pairs (theEnemys.lstGreenTank) do
+      love.graphics.print("Angle: "..v.tourelleAngle, v.x +20, v.y -20)
+    end
   end
 end
 

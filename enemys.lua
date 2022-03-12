@@ -6,6 +6,7 @@ enemys.timerSpawnTank = 1
 enemys.frequSpawnTank = 2
 
 local params = require("params")
+local myPlayer = require("player")
 
 
 function SpawnGreenTank(pLstSprites)
@@ -20,6 +21,10 @@ function SpawnGreenTank(pLstSprites)
     tank.dureeEtat = math.random(1, 4)
     tank.vitesse = math.random(60, 120)
     table.insert(enemys.lstGreenTank, tank)
+
+    tank.imageTourelle = love.graphics.newImage("images/Tanks/barrelGreen.png")
+    tank.tourelleAngle = 0
+    tank.old_tourelleAngle = 0
 end
 
 function ChangeEtat(pTank, pEtat)
@@ -52,6 +57,7 @@ function enemys.Update(dt)
             end
         end
 
+
         -- Le tank est il sorti de l'écran ?
         if tank.x > love.graphics.getWidth() or tank.y > love.graphics.getHeight() then
             table.remove(enemys.lstGreenTank, n)
@@ -59,9 +65,17 @@ function enemys.Update(dt)
     end
 end
 
+
 function enemys.draw()
     for k,v in pairs(enemys.lstGreenTank) do
-        love.graphics.draw(v.images[1], v.x, v.y, 0, v.scaleX, v.scaleY)
+        local r = math.pi /2
+        if v.etat == "gauche" then
+            r = math.pi * 3.5
+        elseif v.etat == "bas" then
+            r = math.pi
+        end
+        love.graphics.draw(v.images[1], v.x, v.y, r, v.scaleX, v.scaleY, v.images[1]:getWidth()/2, v.images[1]:getHeight()/2)
+        love.graphics.draw(v.imageTourelle, v.x , v.y, v.tourelleAngle - math.pi * 1.5, v.scaleX, v.scaleY, v.imageTourelle:getWidth()/2, v.imageTourelle:getHeight())
     end
 end
 return enemys
