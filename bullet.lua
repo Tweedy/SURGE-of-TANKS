@@ -12,6 +12,8 @@ function CreeTirObus(pX, pY, pAngle, pVitesseX, pVitesseY, pLstSprites)
     tir = CreateSprite(pLstSprites, "obus", "Bullets/bulletBlueSilver_outline_", 1)
     tir.x = pX
     tir.y = pY
+    tir.scaleX = 0.25
+    tir.scaleY = 0.25
     tir.angle = pAngle
     tir.vx = pVitesseX
     tir.vy = pVitesseY
@@ -24,6 +26,8 @@ function CreeTirBalles(pX, pY, pAngle, pVitesseX, pVitesseY, pLstSprites)
     tir = CreateSprite(pLstSprites, "balles", "Bullets/bulletBlue_", 1)
     tir.x = pX
     tir.y = pY
+    tir.scaleX = 0.25
+    tir.scaleY = 0.25
     tir.angle = pAngle
     tir.vx = pVitesseX
     tir.vy = pVitesseY
@@ -48,8 +52,7 @@ end
 function bullet.draw()
     local y = 1
     for k,v in pairs(bullet.liste_tirs) do
-        --love.graphics.rectangle("line", v.x, v.y, v.width, v.height)
-        --love.graphics.draw(v.images[1], v.x, v.y, v.angle - math.pi * 1.5, 1, 1, v.width, v.height)
+        love.graphics.draw(v.images[1], v.x, v.y, v.angle - math.pi * 1.5, v.scaleX, v.scaleY, v.width, v.height)
         
         -- Affiche les informations de degugage
         if params.stats_debug == true then

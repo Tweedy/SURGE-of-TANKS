@@ -52,9 +52,6 @@ end
 
 function player.rotate(pRadian)
     player.angle = player.angle + pRadian
-    if player.angle > 6.28 then
-        player.angle = 0
-    end
 end
 
 function player.draw()

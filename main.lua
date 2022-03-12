@@ -38,18 +38,13 @@ end
 
 function Collide(a1, a2)
   if (a1==a2) then return false end
-  local dx = a1.x - a2.x
-  local dy = a1.y - a2.y
-  love.graphics.setColor(0,0,1)
-  love.graphics.rectangle("line",a1.x, a1.y, a1.width,a1.height)
-  love.graphics.rectangle("line",a2.x, a2.y, a2.width,a2.height)
-  love.graphics.setColor(1,1,1)
-  if (math.abs(dx) < a1.width/2+a2.width/2) then
-    if (math.abs(dy) < a1.height/2+a2.height/2) then
-      print(a1.width,a1.height,"tank:",a2.width,a2.height)
+  if(a1.x < a2.x + a2.width*a2.scaleX and 
+     a1.x + a1.width *a1.scaleX > a2.x and
+     a1.y < a2.y + a2.height*a2.scaleY and
+     a1.y + a1.height*a1.scaleY > a2.y) then
       return true
-    end
-  end
+  end 
+
   return false
 end
 
@@ -59,8 +54,6 @@ end
 function love.load()
   Ecran()
   InitGame()
-
-  SpawnGreenTank(lstSprites)
 end
 
 
@@ -96,8 +89,8 @@ function UpdateJeu(dt)
   if timerMachineGun <= 0 then
     if love.mouse.isDown(2) then -- Tire une balle en direction du curseur
       local vx,vy
-      vx = 0 --* math.cos(myPlayer.angle)
-      vy = -2 --* math.sin(myPlayer.angle)
+      vx = 10 * math.cos(myPlayer.angle)
+      vy = 10 * math.sin(myPlayer.angle)
 
       local x1, y1 = 0, 0
       local x2, y2 = 0, 0
@@ -141,12 +134,12 @@ function UpdateJeu(dt)
     myPlayer.vitesse = 0
   end
 
-  --[[ Fait aparaitre les ennemies
+  --Fait aparaitre les ennemies
   theEnemys.timerSpawnTank = theEnemys.timerSpawnTank + dt
   if theEnemys.timerSpawnTank >= theEnemys.frequSpawnTank then
     theEnemys.timerSpawnTank = 0
     SpawnGreenTank(lstSprites)
-  end]]
+  end
   
   -- Supprime les sprites qui ne sont pas affiché à l'ecran
   --  Verifie si le tank est sorti de l'écran.
@@ -159,24 +152,6 @@ function UpdateJeu(dt)
   end
 
   -- Supprime les ennemies et les balles si il y a eu collision
-  
-
-end
-
-
-
-function love.update(dt)
-  if params.pause == false then
-    UpdateJeu(dt)
-    love.timer.sleep(0.05)
-  end
-end
-
-
------------------------------------------------------------------------------------------------------------
-------------------------------------------- DRAW ----------------------------------------------------------
------------------------------------------------------------------------------------------------------------
-function love.draw()
   for kTir=#bullets.liste_tirs,1,-1 do
     local tir = bullets.liste_tirs[kTir]
     for kTank=#theEnemys.lstGreenTank,1,-1 do
@@ -193,6 +168,24 @@ function love.draw()
       end
     end
   end
+
+end
+
+
+
+function love.update(dt)
+  if params.pause == false then
+    UpdateJeu(dt)
+    theEnemys.Update(dt)
+  end
+end
+
+
+-----------------------------------------------------------------------------------------------------------
+------------------------------------------- DRAW ----------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
+function love.draw()
+  
     bullets.draw()
     myPlayer.draw()
     theEnemys.draw()
