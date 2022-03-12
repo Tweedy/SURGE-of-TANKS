@@ -63,11 +63,7 @@ function player.draw()
 
     love.graphics.draw(imgPlayerMachineGun, player.mGunX, player.mGunY, player.angle - math.pi * 1.5, 0.5, 0.5, imgPlayerMachineGun:getWidth()/2, imgPlayerMachineGun:getHeight()/2)
     love.graphics.draw(imgPlayerCannon, player.x, player.y, player.angleCannon - math.pi * 1.5, 0.5, 0.5, imgPlayerCannon:getWidth()/2, imgPlayerCannon:getHeight())
-    if params.stats_debug == true then
-        love.graphics.print("Vitesse: "..player.speed, player.x + 30, player.y)
-        love.graphics.print("X: "..math.floor(player.x)..", Y: "..math.floor(player.y), player.x + 30, player.y + 16)
-        love.graphics.print("Angle: "..player.angle, player.x + 30, player.y + 32)
-    end
+    
 end
 
 return player

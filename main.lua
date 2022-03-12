@@ -19,6 +19,7 @@ local timerMachineGun = 0
 -- Modules
 local myPlayer = require("player")
 local bullets = require("bullet")
+local theEnemys = require("enemys")
 local params = require("params")
 
 
@@ -35,12 +36,31 @@ function InitGame() -- Pour la remise à zéro de la partie
   myPlayer.angleCannon = math.pi * 1.5
 end
 
+function Collide(a1, a2)
+  if (a1==a2) then return false end
+  local dx = a1.x - a2.x
+  local dy = a1.y - a2.y
+  love.graphics.setColor(0,0,1)
+  love.graphics.rectangle("line",a1.x, a1.y, a1.width,a1.height)
+  love.graphics.rectangle("line",a2.x, a2.y, a2.width,a2.height)
+  love.graphics.setColor(1,1,1)
+  if (math.abs(dx) < a1.width/2+a2.width/2) then
+    if (math.abs(dy) < a1.height/2+a2.height/2) then
+      print(a1.width,a1.height,"tank:",a2.width,a2.height)
+      return true
+    end
+  end
+  return false
+end
+
 -----------------------------------------------------------------------------------------------------------
 ------------------------------------------- LOAD ----------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------
 function love.load()
   Ecran()
   InitGame()
+
+  SpawnGreenTank(lstSprites)
 end
 
 
@@ -76,8 +96,8 @@ function UpdateJeu(dt)
   if timerMachineGun <= 0 then
     if love.mouse.isDown(2) then -- Tire une balle en direction du curseur
       local vx,vy
-      vx = 10 * math.cos(myPlayer.angle)
-      vy = 10 * math.sin(myPlayer.angle)
+      vx = 0 --* math.cos(myPlayer.angle)
+      vy = -2 --* math.sin(myPlayer.angle)
 
       local x1, y1 = 0, 0
       local x2, y2 = 0, 0
@@ -89,12 +109,13 @@ function UpdateJeu(dt)
       CreeTirBalles(x1, y1, myPlayer.angle, vx, vy, lstSprites)
       CreeTirBalles(x2, y2, myPlayer.angle, vx, vy, lstSprites)
       timerMachineGun = 50
-      myPlayer.mGunX = myPlayer.x - 15 * math.cos(myPlayer.angle - math.pi)
-      myPlayer.mGunY = myPlayer.y - 15 * math.sin(myPlayer.angle - math.pi)
+      myPlayer.mGunX = myPlayer.x - 11 * math.cos(myPlayer.angle - math.pi)
+      myPlayer.mGunY = myPlayer.y - 11 * math.sin(myPlayer.angle - math.pi)
     end
-  else
-     myPlayer.mGunX = myPlayer.x - 12 * math.cos(myPlayer.angle - math.pi)
-    myPlayer.mGunY = myPlayer.y - 12 * math.sin(myPlayer.angle - math.pi)
+  elseif timerMachineGun > 0 then
+
+    myPlayer.mGunX = myPlayer.x - 14 * math.cos(myPlayer.angle - math.pi)
+    myPlayer.mGunY = myPlayer.y - 14 * math.sin(myPlayer.angle - math.pi)
   end
   timerMachineGun = timerMachineGun - 10 * (60 * dt)
   
@@ -119,14 +140,35 @@ function UpdateJeu(dt)
     myPlayer.y = 20
     myPlayer.vitesse = 0
   end
+
+  --[[ Fait aparaitre les ennemies
+  theEnemys.timerSpawnTank = theEnemys.timerSpawnTank + dt
+  if theEnemys.timerSpawnTank >= theEnemys.frequSpawnTank then
+    theEnemys.timerSpawnTank = 0
+    SpawnGreenTank(lstSprites)
+  end]]
+  
+  -- Supprime les sprites qui ne sont pas affiché à l'ecran
+  --  Verifie si le tank est sorti de l'écran.
+  for k=#lstSprites,1,-1 do
+    local sprite = lstSprites[k]
+    if sprite.y <= 0 or sprite.y >= HAUTEUR_ECRAN or
+        sprite.x <= 0 or sprite.x >= LARGEUR_ECRAN then
+        table.remove(lstSprites, k)
+    end
+  end
+
+  -- Supprime les ennemies et les balles si il y a eu collision
+  
+
 end
 
--- Méthode 1 : L'objet me donne les infos pour que je fasse le taf
 
 
 function love.update(dt)
   if params.pause == false then
     UpdateJeu(dt)
+    love.timer.sleep(0.05)
   end
 end
 
@@ -135,9 +177,35 @@ end
 ------------------------------------------- DRAW ----------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------
 function love.draw()
-    
+  for kTir=#bullets.liste_tirs,1,-1 do
+    local tir = bullets.liste_tirs[kTir]
+    for kTank=#theEnemys.lstGreenTank,1,-1 do
+      local tank = theEnemys.lstGreenTank[kTank]
+      if Collide(tir, tank) then
+        for kSprite=#lstSprites,1,-1 do
+          local sprite = lstSprites[kSprite]
+          if sprite == tank or sprite == tir then
+            table.remove(lstSprites, kSprite)
+          end
+        end
+        table.remove(theEnemys.lstGreenTank, kTank)
+        table.remove(bullets.liste_tirs, kTir)
+      end
+    end
+  end
     bullets.draw()
     myPlayer.draw()
+    theEnemys.draw()
+
+  -- Affiche les informations de degugage
+  if params.stats_debug == true then
+    love.graphics.print("Vitesse: "..myPlayer.speed, myPlayer.x + 30, myPlayer.y)
+    love.graphics.print("X: "..math.floor(myPlayer.x)..", Y: "..math.floor(myPlayer.y), myPlayer.x + 30, myPlayer.y + 16)
+    love.graphics.print("Angle: "..myPlayer.angle, myPlayer.x + 30, myPlayer.y + 32)
+    love.graphics.print("Nb de sprites : "..#lstSprites, 10,10)
+    love.graphics.print("Nb de tanks vert: "..#theEnemys.lstGreenTank, 10,25)
+    love.graphics.print("Nb de balles': "..#bullets.liste_tirs, 10,40)
+  end
 end
 
 
@@ -154,7 +222,8 @@ function love.keypressed(key)
     params.stats_debug = not params.stats_debug
   end
   print(key)
-
+  
+  
 end
 
 function love.mousepressed(x, y, button)
