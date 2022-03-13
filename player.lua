@@ -11,7 +11,6 @@ player.y = 0
 player.speed = 0
 player.angle = 0
 player.angleCannon = 0
-player.old_angleCannon = 0
 player.nextPosX = nil
 player.nextPosY = nil
 player.mGunX = nil

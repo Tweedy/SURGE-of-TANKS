@@ -36,6 +36,20 @@ function CreeGreenObus(pX, pY, pAngle, pVitesseX, pVitesseY, pLstSprites)
     table.insert(bullet.liste_enemyTirs, tir)
 end
 
+function CreeRedObus(pX, pY, pAngle, pVitesseX, pVitesseY, pLstSprites)
+    local tir = {}
+    tir = CreateSprite(pLstSprites, "ObusRouge", "Bullets/bulletRed_outline_", 1)
+    tir.x = pX
+    tir.y = pY
+    tir.scaleX = 0.25
+    tir.scaleY = 0.25
+    tir.angle = pAngle
+    tir.vx = pVitesseX
+    tir.vy = pVitesseY
+  
+    table.insert(bullet.liste_enemyTirs, tir)
+end
+
 function CreeTirBalles(pX, pY, pAngle, pVitesseX, pVitesseY, pLstSprites)
     local tir = {}
     tir = CreateSprite(pLstSprites, "balles", "Bullets/bulletBlue_", 1)

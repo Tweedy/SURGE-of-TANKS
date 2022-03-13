@@ -15,6 +15,8 @@ local mouseY = 0
 
 local timerMachineGun = 0
 local timerEnemyMG = 0
+local timerVague = 10
+local surgeEnemy = 0
 
 
 -- Modules
@@ -42,10 +44,6 @@ function Collide(a1, a2)
   local a1H = a1.height*a1.scaleY
   local a2L = a2.width*a2.scaleX
   local a2H = a2.height*a2.scaleY
-  love.graphics.setColor(0,0,1)
-  love.graphics.rectangle("line",a1.x-(a1L/2), a1.y-(a1H/2), a1L, a1H)
-  love.graphics.rectangle("line",a2.x-(a2L/2), a2.y-(a2H/2), a2L, a2H)
-  love.graphics.setColor(1,1,1)
   if (a1==a2) then return false end
   if(a1.x-(a1L/2) < a2.x-(a2L/2) + a2L and 
   a1.x + a1L > a2.x-(a2L/2) and
@@ -71,6 +69,7 @@ end
 function UpdateJeu(dt)
   dt = math.min(dt, 1/60)
 
+  ------------------------------------- CONTROL JOUEUR ----------------------------------------------------
   if love.keyboard.isDown("d") then
     myPlayer.rotate(1*dt)
   elseif love.keyboard.isDown("q") then
@@ -83,21 +82,16 @@ function UpdateJeu(dt)
       myPlayer.accelerate(-300*dt)
   end
   love.mouse.isVisible()
-  function love.mousemoved(pX, pY) -- Donne la position du curseur au canon du tank joueurqqss
+  function love.mousemoved(pX, pY) -- Donne la position du curseur au canon du tank joueur
     mouseX = pX
     mouseY = pY
   end
-  if params.pause == false then
-    myPlayer.angleCannon = math.angle(myPlayer.x,myPlayer.y,mouseX,mouseY)
-    for k,v in pairs (theEnemys.lstGreenTank) do
-      v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
-    end
-  else
-    myPlayer.old_angleCannon = myPlayer.angleCannon
-    for k,v in pairs (theEnemys.lstGreenTank) do
-      v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
-      myPlayer.old_angleCannon = v.tourelleAngle
-    end
+  myPlayer.angleCannon = math.angle(myPlayer.x,myPlayer.y,mouseX,mouseY) --Donne l'angle du cannon 
+  for k,v in pairs (theEnemys.lstGreenTank) do -- Donne à la tourelle ennemie la position du joueur
+    v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
+  end
+  for k,v in pairs (theEnemys.lstRedTank) do
+    v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
   end
   myPlayer.update(dt)
   if timerMachineGun <= 0 then
@@ -150,13 +144,28 @@ function UpdateJeu(dt)
 
   --Fait aparaitre les ennemies
   theEnemys.timerSpawnTank = theEnemys.timerSpawnTank + dt
-  if theEnemys.timerSpawnTank >= theEnemys.frequSpawnTank then
+  if theEnemys.surgeEnemy == 1 and 
+     theEnemys.totalSpwan < 10 and
+     theEnemys.timerSpawnTank >= theEnemys.frequSpawnTank then
+    theEnemys.totalSpwan = theEnemys.totalSpwan + 1
     theEnemys.timerSpawnTank = 0
     SpawnGreenTank(lstSprites)
+  elseif theEnemys.surgeEnemy == 1 and  theEnemys.totalSpwan >= 10 then
+    theEnemys.surgeEnemy = 2
+    theEnemys.totalSpwan = 0
+  end
+  if theEnemys.surgeEnemy == 2 and 
+     theEnemys.totalSpwan < 10 and
+     theEnemys.timerSpawnTank >= theEnemys.frequSpawnTank then
+    theEnemys.totalSpwan = theEnemys.totalSpwan + 1
+    theEnemys.timerSpawnTank = 0
+    SpawnRedTank(lstSprites)
+  elseif  theEnemys.surgeEnemy == 2 and theEnemys.totalSpwan >= 10 then
+    theEnemys.surgeEnemy = 1
+    theEnemys.totalSpwan = 0
   end
   
   -- Supprime les sprites qui ne sont pas affiché à l'ecran
-  --  Verifie si le tank est sorti de l'écran.
   for k=#lstSprites,1,-1 do
     local sprite = lstSprites[k]
     if sprite.y <= 0 or sprite.y >= HAUTEUR_ECRAN or
@@ -183,6 +192,23 @@ function UpdateJeu(dt)
     end
   end
 
+  for kTir=#bullets.liste_tirs,1,-1 do
+    local tir = bullets.liste_tirs[kTir]
+    for kTank=#theEnemys.lstRedTank,1,-1 do
+      local tank = theEnemys.lstRedTank[kTank]
+      if Collide(tir, tank) then
+        for kSprite=#lstSprites,1,-1 do
+          local sprite = lstSprites[kSprite]
+          if sprite == tank or sprite == tir then
+            table.remove(lstSprites, kSprite)
+          end
+        end
+        table.remove(theEnemys.lstRedTank, kTank)
+        table.remove(bullets.liste_tirs, kTir)
+      end
+    end
+  end
+
   
   if timerEnemyMG <= 0 then
     for k, v in pairs(theEnemys.lstGreenTank) do
@@ -192,8 +218,18 @@ function UpdateJeu(dt)
           CreeGreenObus(v.x,v.y,v.tourelleAngle, vx, vy, lstSprites)
     end
     timerEnemyMG = math.random(400, 700)
-end
-timerEnemyMG = timerEnemyMG - 10 * (60 * dt)
+  end
+  timerEnemyMG = timerEnemyMG - 10 * (60 * dt)
+  if timerEnemyMG <= 0 then
+    for k, v in pairs(theEnemys.lstRedTank) do
+      local vx,vy
+                vx = 4 * math.cos(v.tourelleAngle)
+                vy = 4 * math.sin(v.tourelleAngle)
+          CreeRedObus(v.x,v.y,v.tourelleAngle, vx, vy, lstSprites)
+    end
+    timerEnemyMG = math.random(400, 700)
+  end
+  timerEnemyMG = timerEnemyMG - 10 * (60 * dt)
 
 end
 
@@ -221,20 +257,13 @@ function love.draw()
     love.graphics.print("Vitesse: "..myPlayer.speed, myPlayer.x + 30, myPlayer.y -5)
     love.graphics.print("X: "..math.floor(myPlayer.x)..", Y: "..math.floor(myPlayer.y), myPlayer.x + 30, myPlayer.y + 10)
     love.graphics.print("Angle: "..myPlayer.angle, myPlayer.x + 30, myPlayer.y -20)
-    love.graphics.print("Nb de sprites : "..#lstSprites, 10,10)
+    love.graphics.print("Nb de sprites: "..#lstSprites, 10,10)
     love.graphics.print("Nb de tanks vert: "..#theEnemys.lstGreenTank, 10,25)
-    love.graphics.print("Nb de balles': "..#bullets.liste_tirs, 10,40)
+    love.graphics.print("Nb de balles: "..#bullets.liste_tirs, 10,40)
+    love.graphics.print("Vague d'ennemies n°"..theEnemys.surgeEnemy, 10,55)
+    love.graphics.print("Enemies crée: "..theEnemys.totalSpwan, 10,70)
     for k,v in pairs (theEnemys.lstGreenTank) do
       love.graphics.print("Angle: "..v.tourelleAngle, v.x +20, v.y -20)
-    end
-    for kTir=#bullets.liste_tirs,1,-1 do
-      local tir = bullets.liste_tirs[kTir]
-      for kTank=#theEnemys.lstGreenTank,1,-1 do
-        local tank = theEnemys.lstGreenTank[kTank]
-        if Collide(tir, tank) then
-          Collide()
-        end
-      end
     end
   end
 
