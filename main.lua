@@ -14,6 +14,7 @@ local mouseX = 0
 local mouseY = 0
 
 local timerMachineGun = 0
+local timerEnemyMG = 0
 
 
 -- Modules
@@ -37,14 +38,21 @@ function InitGame() -- Pour la remise à zéro de la partie
 end
 
 function Collide(a1, a2)
+  local a1L = a1.width*a1.scaleX
+  local a1H = a1.height*a1.scaleY
+  local a2L = a2.width*a2.scaleX
+  local a2H = a2.height*a2.scaleY
+  love.graphics.setColor(0,0,1)
+  love.graphics.rectangle("line",a1.x-(a1L/2), a1.y-(a1H/2), a1L, a1H)
+  love.graphics.rectangle("line",a2.x-(a2L/2), a2.y-(a2H/2), a2L, a2H)
+  love.graphics.setColor(1,1,1)
   if (a1==a2) then return false end
-  if(a1.x < a2.x + a2.width*a2.scaleX and 
-     a1.x + a1.width *a1.scaleX > a2.x and
-     a1.y < a2.y + a2.height*a2.scaleY and
-     a1.y + a1.height*a1.scaleY > a2.y) then
-      return true
+  if(a1.x-(a1L/2) < a2.x-(a2L/2) + a2L and 
+  a1.x + a1L > a2.x-(a2L/2) and
+  a1.y < a2.y + a2H-(a2H/2) and
+  a1.y + a1H > a2.y-(a2H/2)) then
+    return true
   end 
-
   return false
 end
 
@@ -175,6 +183,18 @@ function UpdateJeu(dt)
     end
   end
 
+  
+  if timerEnemyMG <= 0 then
+    for k, v in pairs(theEnemys.lstGreenTank) do
+      local vx,vy
+                vx = 4 * math.cos(v.tourelleAngle)
+                vy = 4 * math.sin(v.tourelleAngle)
+          CreeGreenObus(v.x,v.y,v.tourelleAngle, vx, vy, lstSprites)
+    end
+    timerEnemyMG = math.random(400, 700)
+end
+timerEnemyMG = timerEnemyMG - 10 * (60 * dt)
+
 end
 
 
@@ -187,7 +207,7 @@ function love.update(dt)
 end
 
 
------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------ddddddd
 ------------------------------------------- DRAW ----------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------
 function love.draw()
@@ -207,7 +227,17 @@ function love.draw()
     for k,v in pairs (theEnemys.lstGreenTank) do
       love.graphics.print("Angle: "..v.tourelleAngle, v.x +20, v.y -20)
     end
+    for kTir=#bullets.liste_tirs,1,-1 do
+      local tir = bullets.liste_tirs[kTir]
+      for kTank=#theEnemys.lstGreenTank,1,-1 do
+        local tank = theEnemys.lstGreenTank[kTank]
+        if Collide(tir, tank) then
+          Collide()
+        end
+      end
+    end
   end
+
 end
 
 
@@ -237,4 +267,5 @@ function love.mousepressed(x, y, button)
       CreeTirObus(myPlayer.x + vx*2,myPlayer.y + vy*2,myPlayer.angleCannon, vx, vy, lstSprites)
     end
   end
+
 end

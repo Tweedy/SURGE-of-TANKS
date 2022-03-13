@@ -13,11 +13,11 @@ function SpawnGreenTank(pLstSprites)
     print("Spawn un tank")
     local tank = {}
     tank = CreateSprite(pLstSprites, "TankVert", "Tanks/tankGreen_", 1)
-    tank.x = math.random(10, LARGEUR_ECRAN-10)
-    tank.y = math.random(10, HAUTEUR_ECRAN-10)
+    tank.x = LARGEUR_ECRAN/2
+    tank.y = -100
     tank.scaleX = 0.5
     tank.scaleY = 0.5
-    tank.etat = "droite"
+    tank.etat = "bas"
     tank.dureeEtat = math.random(1, 4)
     tank.vitesse = math.random(60, 120)
     table.insert(enemys.lstGreenTank, tank)
