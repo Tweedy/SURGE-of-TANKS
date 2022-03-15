@@ -16,7 +16,12 @@ local mouseY = 0
 local timerMachineGun = 0
 local timerEnemyMG = 0
 local timerVague = 10
-local surgeEnemy = 0
+
+local Surge = {}
+Surge.timer = 2
+Surge.nb = 1
+Surge.print = false
+Surge.pos = "droite"
 
 
 -- Modules
@@ -143,26 +148,43 @@ function UpdateJeu(dt)
   end
 
   --Fait aparaitre les ennemies
-  theEnemys.timerSpawnTank = theEnemys.timerSpawnTank + dt
-  if theEnemys.surgeEnemy == 1 and 
-     theEnemys.totalSpwan < 10 and
-     theEnemys.timerSpawnTank >= theEnemys.frequSpawnTank then
-    theEnemys.totalSpwan = theEnemys.totalSpwan + 1
-    theEnemys.timerSpawnTank = 0
-    SpawnGreenTank(lstSprites)
-  elseif theEnemys.surgeEnemy == 1 and  theEnemys.totalSpwan >= 10 then
-    theEnemys.surgeEnemy = 2
-    theEnemys.totalSpwan = 0
+  Surge.timer = Surge.timer - 1 *dt
+  theEnemys.timerSpawn = theEnemys.timerSpawn + dt
+  
+  if Surge.nb == 1 and Surge.timer > 0 then
+    Surge.print = true
+  elseif Surge.nb == 1 then
+    Surge.print = false
+    Surge.timer = 0
+    if theEnemys.totalSpwan < 10 and theEnemys.timerSpawn >= theEnemys.frequSpawn then
+      theEnemys.totalSpwan = theEnemys.totalSpwan + 1
+      theEnemys.timerSpawn = 0
+      SpawnGreenTank(lstSprites)
+    elseif theEnemys.totalSpwan >= 10 then
+      Surge.timer = 20
+      Surge.nb = 2
+      theEnemys.totalSpwan = 0
+    end
   end
-  if theEnemys.surgeEnemy == 2 and 
-     theEnemys.totalSpwan < 10 and
-     theEnemys.timerSpawnTank >= theEnemys.frequSpawnTank then
-    theEnemys.totalSpwan = theEnemys.totalSpwan + 1
-    theEnemys.timerSpawnTank = 0
-    SpawnRedTank(lstSprites)
-  elseif  theEnemys.surgeEnemy == 2 and theEnemys.totalSpwan >= 10 then
-    theEnemys.surgeEnemy = 1
-    theEnemys.totalSpwan = 0
+  if Surge.nb == 2 and Surge.timer >= 0 and Surge.timer < 6 then
+    Surge.print = true
+  elseif Surge.nb == 2 and Surge.timer < 0 then
+    Surge.print = false
+    Surge.timer = 0
+    if theEnemys.totalSpwan < 10 and theEnemys.timerSpawn >= theEnemys.frequSpawn then
+      theEnemys.totalSpwan = theEnemys.totalSpwan + 1
+      theEnemys.timerSpawn = 0
+      if Surge.pos == "droite" then
+        SpawnRedTank(LARGEUR_ECRAN + 10, HAUTEUR_ECRAN/2, "gauche", lstSprites)
+        Surge.pos = "gauche"
+      else
+        SpawnRedTank(-10, HAUTEUR_ECRAN/2, "droite", lstSprites)
+        Surge.pos = "droite"
+      end
+    elseif theEnemys.totalSpwan >= 10 then
+      Surge.timer = 20
+      Surge.nb = 3
+    end
   end
   
   -- Supprime les sprites qui ne sont pas affiché à l'ecran
@@ -243,7 +265,7 @@ function love.update(dt)
 end
 
 
------------------------------------------------------------------------------------------------------------ddddddd
+-----------------------------------------------------------------------------------------------------------
 ------------------------------------------- DRAW ----------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------
 function love.draw()
@@ -251,6 +273,12 @@ function love.draw()
     bullets.draw()
     myPlayer.draw()
     theEnemys.draw()
+    if Surge.print == true then
+      love.graphics.print(math.floor(Surge.timer).." sec. avant la prochaine vague !",LARGEUR_ECRAN/2-40,50)
+    end
+    if Surge.print == true then
+      love.graphics.print("Vague "..Surge.nb,LARGEUR_ECRAN/2,HAUTEUR_ECRAN/2)
+    end
 
   -- Affiche les informations de degugage
   if params.stats_debug == true then
@@ -260,8 +288,10 @@ function love.draw()
     love.graphics.print("Nb de sprites: "..#lstSprites, 10,10)
     love.graphics.print("Nb de tanks vert: "..#theEnemys.lstGreenTank, 10,25)
     love.graphics.print("Nb de balles: "..#bullets.liste_tirs, 10,40)
-    love.graphics.print("Vague d'ennemies n°"..theEnemys.surgeEnemy, 10,55)
+    love.graphics.print("Vague d'ennemies n°"..Surge.nb, 10,55)
     love.graphics.print("Enemies crée: "..theEnemys.totalSpwan, 10,70)
+    love.graphics.print("Timer vague: "..Surge.timer, 10,85)
+    love.graphics.print("Timer spawn: "..theEnemys.timerSpawn, 10,100)
     for k,v in pairs (theEnemys.lstGreenTank) do
       love.graphics.print("Angle: "..v.tourelleAngle, v.x +20, v.y -20)
     end
