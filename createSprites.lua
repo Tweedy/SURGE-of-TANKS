@@ -15,11 +15,6 @@ function CreateSprite(pList, pType, psImageFile, pnFrames)
       mySprite.images[i] = love.graphics.newImage(fileName)
     end
     
-    mySprite.x = 0
-    mySprite.y = 0
-    mySprite.vx = 0
-    mySprite.vy = 0
-    
     mySprite.width = mySprite.images[1]:getWidth()
     mySprite.height = mySprite.images[1]:getHeight()
     

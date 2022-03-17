@@ -44,19 +44,20 @@ function InitGame() -- Pour la remise à zéro de la partie
   myPlayer.angleCannon = math.pi * 1.5
 end
 
-function Collide(a1, a2)
+function Collide(a1, a2) -- Permet de calculer le point de collision
   local a1L = a1.width*a1.scaleX
   local a1H = a1.height*a1.scaleY
   local a2L = a2.width*a2.scaleX
   local a2H = a2.height*a2.scaleY
-  if (a1==a2) then return false end
-  if(a1.x-(a1L/2) < a2.x-(a2L/2) + a2L and 
-  a1.x + a1L > a2.x-(a2L/2) and
-  a1.y < a2.y + a2H-(a2H/2) and
-  a1.y + a1H > a2.y-(a2H/2)) then
+  if a1 == a2 then
+    return false
+  end
+  if a1.x-(a1L/2) < a2.x-(a2L/2) + a2L and 
+     a1.x + a1L > a2.x-(a2L/2) and
+     a1.y < a2.y + a2H-(a2H/2) and
+     a1.y + a1H > a2.y-(a2H/2) then
     return true
   end 
-  return false
 end
 
 -----------------------------------------------------------------------------------------------------------
@@ -95,7 +96,10 @@ function UpdateJeu(dt)
   for k,v in pairs (theEnemys.lstGreenTank) do -- Donne à la tourelle ennemie la position du joueur
     v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
   end
-  for k,v in pairs (theEnemys.lstRedTank) do
+  for k,v in pairs (theEnemys.lstBeigeTank) do
+    v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
+  end
+  for k,v in pairs (theEnemys.lstBoss) do
     v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
   end
   myPlayer.update(dt)
@@ -147,7 +151,7 @@ function UpdateJeu(dt)
     myPlayer.vitesse = 0
   end
 
-  --Fait aparaitre les ennemies
+  --Fait aparaitre les ennemies par vague
   Surge.timer = Surge.timer - 1 *dt
   theEnemys.timerSpawn = theEnemys.timerSpawn + dt
   
@@ -175,15 +179,27 @@ function UpdateJeu(dt)
       theEnemys.totalSpwan = theEnemys.totalSpwan + 1
       theEnemys.timerSpawn = 0
       if Surge.pos == "droite" then
-        SpawnRedTank(LARGEUR_ECRAN + 10, HAUTEUR_ECRAN/2, "gauche", lstSprites)
+        SpawnBeigeTank(LARGEUR_ECRAN + 10, HAUTEUR_ECRAN/2, "gauche", lstSprites)
         Surge.pos = "gauche"
       else
-        SpawnRedTank(-10, HAUTEUR_ECRAN/2, "droite", lstSprites)
+        SpawnBeigeTank(-10, HAUTEUR_ECRAN/2, "droite", lstSprites)
         Surge.pos = "droite"
       end
     elseif theEnemys.totalSpwan >= 10 then
       Surge.timer = 20
       Surge.nb = 3
+      theEnemys.totalSpwan = 0
+      theEnemys.timerSpawn = 0
+    end
+  end
+  if Surge.nb == 3 and Surge.timer >= 0 and Surge.timer < 6 then
+    Surge.print = true
+  elseif Surge.nb == 3 and Surge.timer < 0 then
+    Surge.print = false
+    Surge.timer = 0
+    if theEnemys.totalSpwan == 0 then
+      theEnemys.totalSpwan = theEnemys.totalSpwan + 1
+      SpawnBoss(lstSprites)
     end
   end
   
@@ -206,9 +222,16 @@ function UpdateJeu(dt)
           local sprite = lstSprites[kSprite]
           if sprite == tank or sprite == tir then
             table.remove(lstSprites, kSprite)
+            if tir.type == "balles" then
+              tank.life = tank.life - 1
+            else
+              tank.life = tank.life - 10
+            end
           end
         end
-        table.remove(theEnemys.lstGreenTank, kTank)
+        if tank.life <= 0 then
+          table.remove(theEnemys.lstGreenTank, kTank)
+        end
         table.remove(bullets.liste_tirs, kTir)
       end
     end
@@ -216,18 +239,50 @@ function UpdateJeu(dt)
 
   for kTir=#bullets.liste_tirs,1,-1 do
     local tir = bullets.liste_tirs[kTir]
-    for kTank=#theEnemys.lstRedTank,1,-1 do
-      local tank = theEnemys.lstRedTank[kTank]
+    for kTank=#theEnemys.lstBeigeTank,1,-1 do
+      local tank = theEnemys.lstBeigeTank[kTank]
       if Collide(tir, tank) then
         for kSprite=#lstSprites,1,-1 do
           local sprite = lstSprites[kSprite]
           if sprite == tank or sprite == tir then
             table.remove(lstSprites, kSprite)
+            if tir.type == "balles" then
+              tank.life = tank.life - 1
+            else
+              tank.life = tank.life - 10
+            end
           end
         end
-        table.remove(theEnemys.lstRedTank, kTank)
+        if tank.life <= 0 then
+          table.remove(theEnemys.lstBeigeTank, kTank)
+        end
         table.remove(bullets.liste_tirs, kTir)
       end
+    end
+  end
+
+  for kTir=#bullets.liste_tirs,1,-1 do
+    local tir = bullets.liste_tirs[kTir]
+      for kTank=#theEnemys.lstBoss,1,-1 do
+        local tank = theEnemys.lstBoss[kTank]
+        if Collide(tir, tank) then
+          for kSprite=#lstSprites,1,-1 do
+            local sprite = lstSprites[kSprite]
+            if sprite == tank or sprite == tir then
+              table.remove(lstSprites, kSprite)
+              if tir.type == "balles" then
+                tank.life = tank.life - 1
+              else
+                tank.life = tank.life - 10
+              end
+            end
+          end
+          if tank.life <= 0 then
+            table.remove(theEnemys.lstBoss, kTank)
+            print("gagné !")
+          end
+          table.remove(bullets.liste_tirs, kTir)
+        end
     end
   end
 
@@ -242,8 +297,20 @@ function UpdateJeu(dt)
     timerEnemyMG = math.random(400, 700)
   end
   timerEnemyMG = timerEnemyMG - 10 * (60 * dt)
+  
   if timerEnemyMG <= 0 then
-    for k, v in pairs(theEnemys.lstRedTank) do
+    for k, v in pairs(theEnemys.lstBeigeTank) do
+      local vx,vy
+                vx = 4 * math.cos(v.tourelleAngle)
+                vy = 4 * math.sin(v.tourelleAngle)
+          CreeBeigeObus(v.x,v.y,v.tourelleAngle, vx, vy, lstSprites)
+    end
+    timerEnemyMG = math.random(400, 700)
+  end
+  timerEnemyMG = timerEnemyMG - 10 * (60 * dt)
+
+  if timerEnemyMG <= 0 then
+    for k, v in pairs(theEnemys.lstBoss) do
       local vx,vy
                 vx = 4 * math.cos(v.tourelleAngle)
                 vy = 4 * math.sin(v.tourelleAngle)
@@ -252,7 +319,6 @@ function UpdateJeu(dt)
     timerEnemyMG = math.random(400, 700)
   end
   timerEnemyMG = timerEnemyMG - 10 * (60 * dt)
-
 end
 
 
