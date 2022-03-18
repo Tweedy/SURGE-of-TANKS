@@ -1,24 +1,41 @@
 local enemys = {}
 enemys.color = nil
+enemys.lstTank = {}
 enemys.lstGreenTank = {}
 enemys.lstBeigeTank = {}
 enemys.lstBoss = {}
-
 
 enemys.timerSpawn = 1
 enemys.frequSpawn = 2
 enemys.totalSpwan = 0
 enemys.bossPhase1 = true
 
-local params = require("params")
+local globalParams = require("params")
 local myPlayer = require("player")
 
-
-function SpawnGreenTank(pLstSprites)
-    print("Spawn un tank")
+function SpawnTank(pLstSprites, pType)
     local tank = {}
-    tank = CreateSprite(pLstSprites, "TankVert", "Tanks/tankGreen_", 1)
-    tank.x = LARGEUR_ECRAN/2
+    local image = ""
+
+    if pType == "TankVert" then
+        image = "Tanks/tankGreen_"
+    elseif pType == "TankBeige" then
+        image = "Tanks/tankBeige_"
+    elseif pType == "TankBoss" then
+        image = "Tanks/tankRed_outline_"
+    end
+
+    tank = CreateSprite(pLstSprites, pType, image, 1)
+
+    if pType == "TankVert" then
+        tank.imageTourelle = love.graphics.newImage("images/Tanks/barrelGreen.png")
+    elseif pType == "TankBeige" then
+        tank.imageTourelle = love.graphics.newImage("images/Tanks/barrelBeige.png")
+    elseif pType == "TankBoss" then
+        tank.imageTourelle = love.graphics.newImage("images/Tanks/barrelRed_outline.png")
+    end
+
+    tank.x = LARGEUR_ECRAN / 2
     tank.y = -100
     tank.scaleX = 0.5
     tank.scaleY = 0.5
@@ -27,46 +44,17 @@ function SpawnGreenTank(pLstSprites)
     tank.dureeEtat = math.random(1, 5)
     tank.vitesse = math.random(50, 100)
     tank.timerTir = 0
-    table.insert(enemys.lstGreenTank, tank)
-
-    tank.imageTourelle = love.graphics.newImage("images/Tanks/barrelGreen.png")
     tank.tourelleAngle = 0
+
+    table.insert(enemys.lstTank, tank)
 end
 
 function SpawnBeigeTank(pX, pY, pEtat, pLstSprites)
-    local tank = {}
-    tank = CreateSprite(pLstSprites, "TankRouge", "Tanks/tankBeige_", 1)
-    tank.x = pX
-    tank.y = pY
-    tank.scaleX = 0.5
-    tank.scaleY = 0.5
-    tank.etat = pEtat
-    tank.life = 10
-    tank.vitesse = math.random(60, 120)
-    tank.timerTir = 0
-    table.insert(enemys.lstBeigeTank, tank)
-
-    tank.imageTourelle = love.graphics.newImage("images/Tanks/barrelBeige.png")
-    tank.tourelleAngle = 0
+    SpawnTank(pLstSprites, "TankBeige")
 end
 
 function SpawnBoss(pLstSprites)
-    local tank = {}
-    tank = CreateSprite(pLstSprites, "TankBoss", "Tanks/tankRed_outline_", 1)
-    tank.x = LARGEUR_ECRAN/2
-    tank.y = -50
-    tank.scaleX = 1
-    tank.scaleY = 1
-    tank.etat = "bas"
-    tank.life = 100
-    tank.dureeEtat = math.random(1, 4)
-    tank.vitesse = 50
-    tank.timerTir = 0
-    tank.timerPauseTir = false
-    table.insert(enemys.lstBoss, tank)
-
-    tank.imageTourelle = love.graphics.newImage("images/Tanks/barrelRed.png")
-    tank.tourelleAngle = 0
+    SpawnTank(pLstSprites, "TankBoss")
 end
 
 function ChangeEtat(pTank, pEtat)
@@ -75,28 +63,21 @@ function ChangeEtat(pTank, pEtat)
 end
 
 function enemys.Update(dt)
-
     -- Donne à la tourelle ennemie la position du joueur
-    for k,v in pairs (enemys.lstGreenTank) do
-        v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
-    end
-    for k,v in pairs (enemys.lstBeigeTank) do
-        v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
-    end
-    for k,v in pairs (enemys.lstBoss) do
+    for k, v in pairs(enemys.lstTank) do
         if enemys.bossPhase1 == true then
-          v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
+            v.tourelleAngle = math.angle(v.x, v.y, myPlayer.x, myPlayer.y)
         else
-          v.tourelleAngle = math.angle(0,v.y,0,myPlayer.y)
+            v.tourelleAngle = math.angle(0, v.y, 0, myPlayer.y)
         end
     end
 
     -- Changement etat tank vert
-    for n = #enemys.lstGreenTank, 1, -1 do
-        local tank = enemys.lstGreenTank[n]
+    for n = #enemys.lstTank, 1, -1 do
+        local tank = enemys.lstTank[n]
         local dist = math.dist(tank.x, tank.y, myPlayer.x, myPlayer.y)
         local rayDist = 100
-        tank.dureeEtat = tank.dureeEtat - dt 
+        tank.dureeEtat = tank.dureeEtat - dt
         if dist <= rayDist then
             if tank.etat == "bas" then
                 tank.y = tank.y + tank.vitesse * dt
@@ -120,9 +101,7 @@ function enemys.Update(dt)
                     ChangeEtat(tank, "bas")
                 end
             end
-
         else
-
             if tank.etat == "droite" then
                 tank.x = tank.x + tank.vitesse * dt
                 if tank.dureeEtat <= 0 then
@@ -156,17 +135,12 @@ function enemys.Update(dt)
                     end
                 end
             end
-            
         end
-
-
-
-
 
         -- Oblige les tanks à faire demi tour si ils sortent de l'écran.
         if tank.x <= 20 then
             ChangeEtat(tank, "droite")
-        elseif tank.x >= LARGEUR_ECRAN-20 then
+        elseif tank.x >= LARGEUR_ECRAN - 20 then
             ChangeEtat(tank, "gauche")
         elseif tank.y <= 20 then
             ChangeEtat(tank, "bas")
@@ -199,7 +173,7 @@ function enemys.Update(dt)
             end
         elseif tank.etat == "gauche" then
             tank.x = tank.x - tank.vitesse * dt
-            if tank.x >= LARGEUR_ECRAN - 100 and tank.x <= LARGEUR_ECRAN -40 then
+            if tank.x >= LARGEUR_ECRAN - 100 and tank.x <= LARGEUR_ECRAN - 40 then
                 if tank.y <= HAUTEUR_ECRAN - 200 then
                     ChangeEtat(tank, "bas")
                 end
@@ -207,10 +181,7 @@ function enemys.Update(dt)
             if tank.x < 40 then
                 ChangeEtat(tank, "haut")
             end
-
-        end  
-
-
+        end
 
         -- Oblige les tanks à faire demi tour si ils sortent de l'écran.
         --[[if tank.x <= 20 then
@@ -227,8 +198,8 @@ function enemys.Update(dt)
     -- Changement etat Boss
     for n = #enemys.lstBoss, 1, -1 do
         local tank = enemys.lstBoss[n]
-        local direction = math.random(1,2)
-        tank.dureeEtat = tank.dureeEtat - dt 
+        local direction = math.random(1, 2)
+        tank.dureeEtat = tank.dureeEtat - dt
         if tank.life <= 70 then
             tank.vitesse = 120
             if tank.life <= 40 then
@@ -253,7 +224,7 @@ function enemys.Update(dt)
         print(tank.etat)
         if tank.etat == "bas" then
             tank.y = tank.y + tank.vitesse * dt
-            if tank.y >= HAUTEUR_ECRAN/4 then
+            if tank.y >= HAUTEUR_ECRAN / 4 then
                 if tank.dureeEtat <= 0 then
                     if direction == 1 then
                         ChangeEtat(tank, "gauche")
@@ -264,7 +235,6 @@ function enemys.Update(dt)
             end
         elseif tank.etat == "haut" then
             tank.y = tank.y - tank.vitesse * dt
-            
         end
         if tank.etat == "droite" then
             tank.x = tank.x + tank.vitesse * dt
@@ -284,14 +254,12 @@ function enemys.Update(dt)
                     ChangeEtat(tank, "droite")
                 end
             end
-        end  
-
-
+        end
 
         -- Oblige les tanks à faire demi tour si ils sortent de l'écran.
         if tank.x <= 20 then
             ChangeEtat(tank, "droite")
-        elseif tank.x >= LARGEUR_ECRAN-20 then
+        elseif tank.x >= LARGEUR_ECRAN - 20 then
             ChangeEtat(tank, "gauche")
         elseif tank.y <= 20 then
             ChangeEtat(tank, "bas")
@@ -299,14 +267,11 @@ function enemys.Update(dt)
             ChangeEtat(tank, "haut")
         end
     end
-    
 end
 
-
 function enemys.draw()
-
-    for k,v in pairs(enemys.lstGreenTank) do
-        local r = math.pi /2
+    for k, v in pairs(enemys.lstTank) do
+        local r = math.pi / 2
         if v.etat == "gauche" then
             r = math.pi * 3.5
         elseif v.etat == "bas" then
@@ -314,35 +279,27 @@ function enemys.draw()
         elseif v.etat == "haut" then
             r = math.pi * 2
         end
-        love.graphics.draw(v.images[1], v.x, v.y, r, v.scaleX, v.scaleY, v.images[1]:getWidth()/2, v.images[1]:getHeight()/2)
-        love.graphics.draw(v.imageTourelle, v.x , v.y, v.tourelleAngle - math.pi * 1.5, v.scaleX, v.scaleY, v.imageTourelle:getWidth()/2, v.imageTourelle:getHeight())
-        love.graphics.print("Vie: "..v.life, v.x -20, v.y -40)
-    end
-    for k,v in pairs(enemys.lstBeigeTank) do
-        local r = math.pi /2
-        if v.etat == "gauche" then
-            r = math.pi * 3.5
-        elseif v.etat == "bas" then
-            r = math.pi
-        elseif v.etat == "haut" then
-            r = math.pi * 2
-        end
-        love.graphics.draw(v.images[1], v.x, v.y, r, v.scaleX, v.scaleY, v.images[1]:getWidth()/2, v.images[1]:getHeight()/2)
-        love.graphics.draw(v.imageTourelle, v.x , v.y, v.tourelleAngle - math.pi * 1.5, v.scaleX, v.scaleY, v.imageTourelle:getWidth()/2, v.imageTourelle:getHeight())
-        love.graphics.print("Vie: "..v.life, v.x -20, v.y -40)
-    end
-    for k,v in pairs(enemys.lstBoss) do
-        local r = math.pi /2
-        if v.etat == "gauche" then
-            r = math.pi * 3.5
-        elseif v.etat == "bas" then
-            r = math.pi
-        elseif v.etat == "haut" then
-            r = math.pi * 2
-        end
-        love.graphics.draw(v.images[1], v.x, v.y, r, v.scaleX, v.scaleY, v.images[1]:getWidth()/2, v.images[1]:getHeight()/2)
-        love.graphics.draw(v.imageTourelle, v.x , v.y, v.tourelleAngle - math.pi * 1.5, v.scaleX, v.scaleY, v.imageTourelle:getWidth()/2, v.imageTourelle:getHeight())
-        love.graphics.print("Vie: "..v.life, v.x -30, v.y -50)
+        love.graphics.draw(
+            v.images[1],
+            v.x,
+            v.y,
+            r,
+            v.scaleX,
+            v.scaleY,
+            v.images[1]:getWidth() / 2,
+            v.images[1]:getHeight() / 2
+        )
+        love.graphics.draw(
+            v.imageTourelle,
+            v.x,
+            v.y,
+            v.tourelleAngle - math.pi * 1.5,
+            v.scaleX,
+            v.scaleY,
+            v.imageTourelle:getWidth() / 2,
+            v.imageTourelle:getHeight()
+        )
+        love.graphics.print("Vie: " .. v.life, v.x - 20, v.y - 40)
     end
 end
 return enemys

@@ -1,5 +1,5 @@
 local player = {}
-local params = require("params")
+local globalParams = require("params")
 
 local imgPlayerTank = love.graphics.newImage("images/Tanks/tankBlue.png")
 local imgPlayerTracks = love.graphics.newImage("images/Tanks/tracksSmall.png")
@@ -15,7 +15,6 @@ player.nextPosX = nil
 player.nextPosY = nil
 player.mGunX = nil
 player.mGunY = nil
-
 
 function player.update(dt)
     player.x = player.x + (player.speed * dt) * math.cos(player.angle)
@@ -54,12 +53,47 @@ function player.rotate(pRadian)
 end
 
 function player.draw()
-    love.graphics.draw(imgPlayerTank, player.x, player.y, player.angle - math.pi * 1.5, 0.5, 0.5, imgPlayerTank:getWidth()/2, imgPlayerTank:getHeight()/2)
-    love.graphics.draw(imgPlayerTracks, player.x, player.y, player.angle - math.pi * 1.5, 0.5, 0.5, imgPlayerTracks:getWidth()/2, imgPlayerTracks:getHeight()/2)
+    love.graphics.draw(
+        imgPlayerTank,
+        player.x,
+        player.y,
+        player.angle - math.pi * 1.5,
+        0.5,
+        0.5,
+        imgPlayerTank:getWidth() / 2,
+        imgPlayerTank:getHeight() / 2
+    )
+    love.graphics.draw(
+        imgPlayerTracks,
+        player.x,
+        player.y,
+        player.angle - math.pi * 1.5,
+        0.5,
+        0.5,
+        imgPlayerTracks:getWidth() / 2,
+        imgPlayerTracks:getHeight() / 2
+    )
 
-    love.graphics.draw(imgPlayerMachineGun, player.mGunX, player.mGunY, player.angle - math.pi * 1.5, 0.5, 0.5, imgPlayerMachineGun:getWidth()/2, imgPlayerMachineGun:getHeight()/2)
-    love.graphics.draw(imgPlayerCannon, player.x, player.y, player.angleCannon - math.pi * 1.5, 0.5, 0.5, imgPlayerCannon:getWidth()/2, imgPlayerCannon:getHeight())
-    
+    love.graphics.draw(
+        imgPlayerMachineGun,
+        player.mGunX,
+        player.mGunY,
+        player.angle - math.pi * 1.5,
+        0.5,
+        0.5,
+        imgPlayerMachineGun:getWidth() / 2,
+        imgPlayerMachineGun:getHeight() / 2
+    )
+    love.graphics.draw(
+        imgPlayerCannon,
+        player.x,
+        player.y,
+        player.angleCannon - math.pi * 1.5,
+        0.5,
+        0.5,
+        imgPlayerCannon:getWidth() / 2,
+        imgPlayerCannon:getHeight()
+    )
 end
 
 return player
