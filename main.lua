@@ -7,22 +7,6 @@ io.stdout:setvbuf('no')
 if arg[#arg] == "-debug" then require("mobdebug").start() end
 -----------------------------------------------------------------------------------------------------------
 
--- Variables
-local lstSprites = {}
-
-local mouseX = 0
-local mouseY = 0
-
-local timerMachineGun = 0
-local timerEnemyMG = 0
-local timerVague = 10
-
-local Surge = {}
-Surge.timer = 2
-Surge.nb = 1
-Surge.print = false
-Surge.pos = "droite"
-
 
 -- Modules
 local myPlayer = require("player")
@@ -31,11 +15,22 @@ local theEnemys = require("enemys")
 local params = require("params")
 
 
------------------------------------------- FONCTIONS ---------------------------------------------------------
+-- Variables
+local lstSprites = {}
 
--- Renvoie l'angle entre deux vecteurs ayant la même origine.
-function math.angle(x1,y1, x2,y2) return math.atan2(y2-y1, x2-x1) end
+local mouseX = 0
+local mouseY = 0
 
+local timerMachineGun = 0
+
+local Surge = {}
+Surge.timer = 2
+Surge.nb = 1
+Surge.print = false
+Surge.pos = "droite"
+
+
+--------------------------------------- FONCTIONS ---------------------------------------------------------
 
 function InitGame() -- Pour la remise à zéro de la partie
   myPlayer.x = LARGEUR_ECRAN /2
@@ -44,21 +39,6 @@ function InitGame() -- Pour la remise à zéro de la partie
   myPlayer.angleCannon = math.pi * 1.5
 end
 
-function Collide(a1, a2) -- Permet de calculer le point de collision
-  local a1L = a1.width*a1.scaleX
-  local a1H = a1.height*a1.scaleY
-  local a2L = a2.width*a2.scaleX
-  local a2H = a2.height*a2.scaleY
-  if a1 == a2 then
-    return false
-  end
-  if a1.x-(a1L/2) < a2.x-(a2L/2) + a2L and 
-     a1.x + a1L > a2.x-(a2L/2) and
-     a1.y < a2.y + a2H-(a2H/2) and
-     a1.y + a1H > a2.y-(a2H/2) then
-    return true
-  end 
-end
 
 -----------------------------------------------------------------------------------------------------------
 ------------------------------------------- LOAD ----------------------------------------------------------
@@ -75,34 +55,28 @@ end
 function UpdateJeu(dt)
   dt = math.min(dt, 1/60)
 
-  ------------------------------------- CONTROL JOUEUR ----------------------------------------------------
+  ---------------------------------- CONTROL DU JOUEUR ----------------------------------------------------
   if love.keyboard.isDown("d") then
     myPlayer.rotate(1*dt)
   elseif love.keyboard.isDown("q") then
     myPlayer.rotate(-1*dt)
   end
-  
   if love.keyboard.isDown("z") then
       myPlayer.accelerate(300*dt)
   elseif love.keyboard.isDown("s") then
       myPlayer.accelerate(-300*dt)
   end
+
   love.mouse.isVisible()
   function love.mousemoved(pX, pY) -- Donne la position du curseur au canon du tank joueur
     mouseX = pX
     mouseY = pY
   end
+
   myPlayer.angleCannon = math.angle(myPlayer.x,myPlayer.y,mouseX,mouseY) --Donne l'angle du cannon 
-  for k,v in pairs (theEnemys.lstGreenTank) do -- Donne à la tourelle ennemie la position du joueur
-    v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
-  end
-  for k,v in pairs (theEnemys.lstBeigeTank) do
-    v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
-  end
-  for k,v in pairs (theEnemys.lstBoss) do
-    v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
-  end
+
   myPlayer.update(dt)
+
   if timerMachineGun <= 0 then
     if love.mouse.isDown(2) then -- Tire une balle en direction du curseur
       local vx,vy
@@ -287,38 +261,49 @@ function UpdateJeu(dt)
   end
 
   
-  if timerEnemyMG <= 0 then
-    for k, v in pairs(theEnemys.lstGreenTank) do
+  for k, v in pairs(theEnemys.lstGreenTank) do
+    if v.timerTir <= 0 then
+      v.timerTir = math.random(400, 700)
       local vx,vy
                 vx = 4 * math.cos(v.tourelleAngle)
                 vy = 4 * math.sin(v.tourelleAngle)
-          CreeGreenObus(v.x,v.y,v.tourelleAngle, vx, vy, lstSprites)
+          CreeGreenObus(v.x + vx*12,v.y + vy*12,v.tourelleAngle, vx, vy, lstSprites)
     end
-    timerEnemyMG = math.random(400, 700)
+    v.timerTir = v.timerTir - 10 * (60 * dt)
   end
-  timerEnemyMG = timerEnemyMG - 10 * (60 * dt)
   
-  if timerEnemyMG <= 0 then
-    for k, v in pairs(theEnemys.lstBeigeTank) do
+  for k, v in pairs(theEnemys.lstBeigeTank) do
+    if v.timerTir <= 0 then
+      v.timerTir = math.random(400, 700)
       local vx,vy
                 vx = 4 * math.cos(v.tourelleAngle)
                 vy = 4 * math.sin(v.tourelleAngle)
-          CreeBeigeObus(v.x,v.y,v.tourelleAngle, vx, vy, lstSprites)
+          CreeBeigeObus(v.x + vx*12,v.y + vy*12,v.tourelleAngle, vx, vy, lstSprites)
     end
-    timerEnemyMG = math.random(400, 700)
+    v.timerTir = v.timerTir - 10 * (60 * dt)
   end
-  timerEnemyMG = timerEnemyMG - 10 * (60 * dt)
 
-  if timerEnemyMG <= 0 then
-    for k, v in pairs(theEnemys.lstBoss) do
+  for k, v in pairs(theEnemys.lstBoss) do
+    if v.timerTir <= 0 then
+      if v.life <= 40 and v.timerPauseTir == false then
+        theEnemys.bossPhase1 = false
+        v.timerTir = 80
+        v.timerPauseTir = true
+      elseif v.life <= 40 and v.timerPauseTir == true then
+        theEnemys.bossPhase1 = false
+        v.timerTir = 400
+        v.timerPauseTir = false
+      else
+        v.timerTir = math.random(400, 700)
+      end
       local vx,vy
-                vx = 4 * math.cos(v.tourelleAngle)
-                vy = 4 * math.sin(v.tourelleAngle)
-          CreeRedObus(v.x,v.y,v.tourelleAngle, vx, vy, lstSprites)
+      vx = 4 * math.cos(v.tourelleAngle)
+      vy = 4 * math.sin(v.tourelleAngle)
+      CreeRedObus(v.x + vx*12,v.y + vy*12,v.tourelleAngle, vx, vy, lstSprites)
     end
-    timerEnemyMG = math.random(400, 700)
+    v.timerTir = v.timerTir - 10 * (60 * dt)
+    print(v.timerTir)
   end
-  timerEnemyMG = timerEnemyMG - 10 * (60 * dt)
 end
 
 
@@ -336,15 +321,15 @@ end
 -----------------------------------------------------------------------------------------------------------
 function love.draw()
   
-    bullets.draw()
-    myPlayer.draw()
-    theEnemys.draw()
-    if Surge.print == true then
-      love.graphics.print(math.floor(Surge.timer).." sec. avant la prochaine vague !",LARGEUR_ECRAN/2-40,50)
-    end
-    if Surge.print == true then
-      love.graphics.print("Vague "..Surge.nb,LARGEUR_ECRAN/2,HAUTEUR_ECRAN/2)
-    end
+  bullets.draw()
+  myPlayer.draw()
+  theEnemys.draw()
+  if Surge.print == true then
+    love.graphics.print(math.floor(Surge.timer).." sec. avant la prochaine vague !",LARGEUR_ECRAN/2-40,50)
+  end
+  if Surge.print == true then
+    love.graphics.print({{1, 0, 1}, "Vague"..Surge.nb},LARGEUR_ECRAN/2,HAUTEUR_ECRAN/2)
+  end
 
   -- Affiche les informations de degugage
   if params.stats_debug == true then

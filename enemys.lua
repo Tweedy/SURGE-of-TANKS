@@ -8,6 +8,7 @@ enemys.lstBoss = {}
 enemys.timerSpawn = 1
 enemys.frequSpawn = 2
 enemys.totalSpwan = 0
+enemys.bossPhase1 = true
 
 local params = require("params")
 local myPlayer = require("player")
@@ -25,6 +26,7 @@ function SpawnGreenTank(pLstSprites)
     tank.life = 10
     tank.dureeEtat = math.random(1, 5)
     tank.vitesse = math.random(50, 100)
+    tank.timerTir = 0
     table.insert(enemys.lstGreenTank, tank)
 
     tank.imageTourelle = love.graphics.newImage("images/Tanks/barrelGreen.png")
@@ -41,6 +43,7 @@ function SpawnBeigeTank(pX, pY, pEtat, pLstSprites)
     tank.etat = pEtat
     tank.life = 10
     tank.vitesse = math.random(60, 120)
+    tank.timerTir = 0
     table.insert(enemys.lstBeigeTank, tank)
 
     tank.imageTourelle = love.graphics.newImage("images/Tanks/barrelBeige.png")
@@ -58,6 +61,8 @@ function SpawnBoss(pLstSprites)
     tank.life = 100
     tank.dureeEtat = math.random(1, 4)
     tank.vitesse = 50
+    tank.timerTir = 0
+    tank.timerPauseTir = false
     table.insert(enemys.lstBoss, tank)
 
     tank.imageTourelle = love.graphics.newImage("images/Tanks/barrelRed.png")
@@ -70,6 +75,21 @@ function ChangeEtat(pTank, pEtat)
 end
 
 function enemys.Update(dt)
+
+    -- Donne à la tourelle ennemie la position du joueur
+    for k,v in pairs (enemys.lstGreenTank) do
+        v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
+    end
+    for k,v in pairs (enemys.lstBeigeTank) do
+        v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
+    end
+    for k,v in pairs (enemys.lstBoss) do
+        if enemys.bossPhase1 == true then
+          v.tourelleAngle = math.angle(v.x,v.y,myPlayer.x,myPlayer.y)
+        else
+          v.tourelleAngle = math.angle(0,v.y,0,myPlayer.y)
+        end
+    end
 
     -- Changement etat tank vert
     for n = #enemys.lstGreenTank, 1, -1 do
@@ -209,6 +229,27 @@ function enemys.Update(dt)
         local tank = enemys.lstBoss[n]
         local direction = math.random(1,2)
         tank.dureeEtat = tank.dureeEtat - dt 
+        if tank.life <= 70 then
+            tank.vitesse = 120
+            if tank.life <= 40 then
+                tank.dureeEtat = 1
+                tank.vitesse = 0
+                if tank.etat == "haut" then
+                    if tank.y <= 50 then
+                        ChangeEtat(tank, "gauche")
+                    end
+                end
+                if tank.etat == "gauche" then
+                    if tank.x <= 50 then
+                        ChangeEtat(tank, "droite")
+                    end
+                elseif tank.etat == "droite" then
+                    if tank.x >= LARGEUR_ECRAN - 50 then
+                        ChangeEtat(tank, "gauche")
+                    end
+                end
+            end
+        end
         print(tank.etat)
         if tank.etat == "bas" then
             tank.y = tank.y + tank.vitesse * dt
@@ -258,10 +299,12 @@ function enemys.Update(dt)
             ChangeEtat(tank, "haut")
         end
     end
+    
 end
 
 
 function enemys.draw()
+
     for k,v in pairs(enemys.lstGreenTank) do
         local r = math.pi /2
         if v.etat == "gauche" then
