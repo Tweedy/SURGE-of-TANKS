@@ -4,6 +4,7 @@ bullet.liste_enemyTirs = {}
 
 local globalParams = require("params")
 local theEnemys = require("enemys")
+local myPlayer = require("player")
 local moduleCreateSprites = require("createSprites")
 
 function CreeTir(pX, pY, pAngle, pVitesseX, pVitesseY, pLstSprites, pType)
@@ -12,22 +13,33 @@ function CreeTir(pX, pY, pAngle, pVitesseX, pVitesseY, pLstSprites, pType)
 
     if pType == "ObusBleu" then
         image = "Bullets/bulletBlueSilver_outline_"
+        globalParams.sonCannon:stop()
+        globalParams.sonCannon:play()
     elseif pType == "ObusVert" then
         image = "Bullets/bulletGreen_outline_"
     elseif pType == "ObusBeige" then
         image = "Bullets/bulletBeige_outline_"
     elseif pType == "ObusRouge" then
         image = "Bullets/bulletRed_outline_"
+        globalParams.sonCannonBoss:stop()
+        globalParams.sonCannonBoss:play()
     elseif pType == "BallesBleu" then
         image = "Bullets/bulletBlue_"
+        globalParams.sonMitrailleuse:stop()
+        globalParams.sonMitrailleuse:play()
     end
 
     tir = CreateSprite(pLstSprites, pType, image, 1)
 
     tir.x = pX
     tir.y = pY
-    tir.scaleX = 0.25
-    tir.scaleY = 0.25
+    if pType == "ObusRouge" then
+        tir.scaleX = 0.5
+        tir.scaleY = 0.5
+    else
+        tir.scaleX = 0.25
+        tir.scaleY = 0.25
+    end
     tir.angle = pAngle
     tir.vx = pVitesseX
     tir.vy = pVitesseY
@@ -35,7 +47,7 @@ function CreeTir(pX, pY, pAngle, pVitesseX, pVitesseY, pLstSprites, pType)
     table.insert(bullet.liste_tirs, tir)
 end
 
-function bullet.update(dt)
+function bullet.Update(dt)
     -- Supprime les tirs qui depasse de la zone de jeu
     for kTir = #bullet.liste_tirs, 1, -1 do
         local tir = bullet.liste_tirs[kTir]
@@ -46,28 +58,56 @@ function bullet.update(dt)
         end
     end
 
-    -- Supprime les ennemies et les balles si il y a eu collision
+    -- Verifier si il y a des enemies et des balles dans la liste
     for kTir = #bullet.liste_tirs, 1, -1 do
         local tir = bullet.liste_tirs[kTir]
         for kTank = #theEnemys.lstTank, 1, -1 do
             local tank = theEnemys.lstTank[kTank]
-            if tir.type == "ObusBleu" or tir.type == "BallesBleu" then
-                if Collide(tir, tank) then
-                    for kSprite = #globalParams.lstSprites, 1, -1 do
-                        local sprite = globalParams.lstSprites[kSprite]
+            for kSprite = #globalParams.lstSprites, 1, -1 do
+                local sprite = globalParams.lstSprites[kSprite]
+
+                if tir.type == "ObusBleu" or tir.type == "BallesBleu" then
+                    -- Supprime les ennemies et les balles si il y a eu collision
+                    if Collide(tir, tank) then
                         if sprite == tank or sprite == tir then
                             table.remove(globalParams.lstSprites, kSprite)
+                            table.remove(bullet.liste_tirs, kTir)
+                            globalParams.sonExplosion:stop()
+                            globalParams.sonExplosion:play()
                             if tir.type == "BallesBleu" then
                                 tank.life = tank.life - 1
                             else
                                 tank.life = tank.life - 10
                             end
+                            if tank.life <= 0 then
+                                table.remove(theEnemys.lstTank, kTank)
+                                if tank.type == "TankBoss" then
+                                    globalParams.sonVictoire:play()
+                                    globalParams.ecran_courant = "victoire"
+                                end
+                            end
                         end
                     end
-                    if tank.life <= 0 then
-                        table.remove(theEnemys.lstTank, kTank)
+                else
+                    -- Retire de la vie au joueur si il y a eu collision
+                    if Collide(tir, myPlayer) then
+                        if sprite == myPlayer or sprite == tir then
+                            table.remove(globalParams.lstSprites, kSprite)
+                            table.remove(bullet.liste_tirs, kTir)
+                            globalParams.sonImpactPlayer:stop()
+                            globalParams.sonImpactPlayer:play()
+                            if tir.type == "ObusRouge" then
+                                myPlayer.life = myPlayer.life - 10
+                            else
+                                myPlayer.life = myPlayer.life - 1
+                            end
+                        end
                     end
-                    table.remove(bullet.liste_tirs, kTir)
+                    if myPlayer.life <= 0 then
+                        myPlayer.life = 0
+                        globalParams.sonDefaite:play()
+                        globalParams.ecran_courant = "gameover"
+                    end
                 end
             end
         end
@@ -83,7 +123,7 @@ function bullet.update(dt)
                 CreeTir(v.x + vx * 2, v.y + vy * 2, v.tourelleAngle, vx, vy, globalParams.lstSprites, "ObusVert")
             elseif v.type == "TankBeige" then
                 CreeTir(v.x + vx * 2, v.y + vy * 2, v.tourelleAngle, vx, vy, globalParams.lstSprites, "ObusBeige")
-            else
+            elseif v.type == "TankBoss" then
                 if v.life <= 40 and v.timerPauseTir == false then
                     theEnemys.bossPhase1 = false
                     v.timerTir = 80
@@ -102,25 +142,19 @@ function bullet.update(dt)
     end
 end
 
-function bullet.draw()
+function bullet.Draw()
     local y = 1
     for k, v in pairs(bullet.liste_tirs) do
-        love.graphics.draw(v.images[1], v.x, v.y, v.angle - math.pi * 1.5, v.scaleX, v.scaleY, v.width, v.height)
-
-        -- Affiche les informations de degugage
-        if globalParams.stats_debug == true then
-            love.graphics.print(
-                "Balles direction: X: " ..
-                    math.floor(v.x) ..
-                        ", Y: " .. math.floor(v.y) .. ",  Vx: " .. math.floor(v.vx) .. ", Vy: " .. math.floor(v.vy),
-                600,
-                y + 15 * k
-            )
-        end
-    end
-
-    for k, v in pairs(bullet.liste_enemyTirs) do
-        love.graphics.draw(v.images[1], v.x, v.y, v.angle - math.pi * 1.5, v.scaleX, v.scaleY, v.width, v.height)
+        love.graphics.draw(
+            v.images[1],
+            v.x,
+            v.y,
+            v.angle - math.pi * 1.5,
+            v.scaleX,
+            v.scaleY,
+            v.width / 2,
+            v.height / 2
+        )
 
         -- Affiche les informations de degugage
         if globalParams.stats_debug == true then

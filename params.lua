@@ -1,4 +1,26 @@
 local params = {}
+-- Sons
+params.sonPlay = true
+params.sonVague1 = love.audio.newSource("sons/round_1.ogg", "static")
+params.sonVague2 = love.audio.newSource("sons/round_2.ogg", "static")
+params.sonBoss = love.audio.newSource("sons/final_round.ogg", "static")
+params.sonVictoire = love.audio.newSource("sons/you_win.ogg", "static")
+params.sonDefaite = love.audio.newSource("sons/game_over.ogg", "static")
+params.sonMitrailleuse = love.audio.newSource("sons/mitrailleuse.ogg", "static")
+params.sonCannon = love.audio.newSource("sons/cannon.ogg", "static")
+params.sonCannonBoss = love.audio.newSource("sons/cannon_boss.ogg", "static")
+params.sonExplosion = love.audio.newSource("sons/explosion.ogg", "static")
+params.sonImpactPlayer = love.audio.newSource("sons/impact_player.ogg", "static")
+params.sonJeu = love.audio.newSource("sons/FreeMe.mp3", "stream")
+
+-- Ecran courant
+params.ecran_courant = "menu"
+params.controlPlayer = false
+
+params.IMG_MENU = love.graphics.newImage("images/Ecrans/menu.jpg")
+params.IMG_GAMEOVER = love.graphics.newImage("images/Ecrans/gameover.jpg")
+params.img_VICTORY = love.graphics.newImage("images/Ecrans/victory.jpg")
+params.img_PAUSE = love.graphics.newImage("images/Ecrans/pause.png")
 
 params.pause = false
 params.stats_debug = false
@@ -30,10 +52,19 @@ end
 
 function Ecran()
   love.window.setMode(1024, 768)
-  love.window.setTitle("Atelier Shooter Gamecodeur")
+  love.window.setTitle("SURGE of TANKS - Projet 1 Gamecodeur")
 
   LARGEUR_ECRAN = love.graphics.getWidth()
   HAUTEUR_ECRAN = love.graphics.getHeight()
+end
+
+function params.Update()
+  params.sonJeu:play()
+  if params.ecran_courant == "menu" or params.ecran_courant == "gameover" or params.ecran_courant == "victoire" then
+    params.sonJeu:setVolume(0.2)
+  else
+    params.sonJeu:setVolume(0.05)
+  end
 end
 
 function math.dist(x1, y1, x2, y2)

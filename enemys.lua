@@ -1,9 +1,6 @@
 local enemys = {}
 enemys.color = nil
 enemys.lstTank = {}
-enemys.lstGreenTank = {}
-enemys.lstBeigeTank = {}
-enemys.lstBoss = {}
 
 enemys.timerSpawn = 1
 enemys.frequSpawn = 2
@@ -13,7 +10,7 @@ enemys.bossPhase1 = true
 local globalParams = require("params")
 local myPlayer = require("player")
 
-function SpawnTank(pLstSprites, pType)
+function SpawnTank(pX, pY, pScaleX, pScaleY, pEtat, pLife, pLstSprites, pType)
     local tank = {}
     local image = ""
 
@@ -35,26 +32,19 @@ function SpawnTank(pLstSprites, pType)
         tank.imageTourelle = love.graphics.newImage("images/Tanks/barrelRed_outline.png")
     end
 
-    tank.x = LARGEUR_ECRAN / 2
-    tank.y = -100
-    tank.scaleX = 0.5
-    tank.scaleY = 0.5
-    tank.etat = "bas"
-    tank.life = 10
+    tank.x = pX
+    tank.y = pY
+    tank.scaleX = pScaleX
+    tank.scaleY = pScaleY
+    tank.etat = pEtat
+    tank.life = pLife
     tank.dureeEtat = math.random(1, 5)
     tank.vitesse = math.random(50, 100)
     tank.timerTir = 0
+    tank.timerPauseTir = false
     tank.tourelleAngle = 0
 
     table.insert(enemys.lstTank, tank)
-end
-
-function SpawnBeigeTank(pX, pY, pEtat, pLstSprites)
-    SpawnTank(pLstSprites, "TankBeige")
-end
-
-function SpawnBoss(pLstSprites)
-    SpawnTank(pLstSprites, "TankBoss")
 end
 
 function ChangeEtat(pTank, pEtat)
@@ -72,12 +62,11 @@ function enemys.Update(dt)
         end
     end
 
-    -- Changement etat tank vert
-    for n = #enemys.lstTank, 1, -1 do
-        local tank = enemys.lstTank[n]
+    -- Changement etat tank Vert
+    function EtatTankVert(tank)
         local dist = math.dist(tank.x, tank.y, myPlayer.x, myPlayer.y)
         local rayDist = 100
-        tank.dureeEtat = tank.dureeEtat - dt
+
         if dist <= rayDist then
             if tank.etat == "bas" then
                 tank.y = tank.y + tank.vitesse * dt
@@ -136,22 +125,10 @@ function enemys.Update(dt)
                 end
             end
         end
-
-        -- Oblige les tanks à faire demi tour si ils sortent de l'écran.
-        if tank.x <= 20 then
-            ChangeEtat(tank, "droite")
-        elseif tank.x >= LARGEUR_ECRAN - 20 then
-            ChangeEtat(tank, "gauche")
-        elseif tank.y <= 20 then
-            ChangeEtat(tank, "bas")
-        elseif tank.y >= HAUTEUR_ECRAN then
-            ChangeEtat(tank, "haut")
-        end
     end
 
-    -- Changement etat tank Rouge
-    for n = #enemys.lstBeigeTank, 1, -1 do
-        local tank = enemys.lstBeigeTank[n]
+    -- Changement etat tank Beige
+    function EtatTankBeige(tank)
         if tank.etat == "bas" then
             tank.y = tank.y + tank.vitesse * dt
             if tank.y >= HAUTEUR_ECRAN - 40 then
@@ -182,34 +159,17 @@ function enemys.Update(dt)
                 ChangeEtat(tank, "haut")
             end
         end
-
-        -- Oblige les tanks à faire demi tour si ils sortent de l'écran.
-        --[[if tank.x <= 20 then
-            ChangeEtat(tank, "droite")
-        elseif tank.x >= LARGEUR_ECRAN-20 then
-            ChangeEtat(tank, "gauche")
-        elseif tank.y <= 20 then
-            ChangeEtat(tank, "bas")
-        elseif tank.y >= HAUTEUR_ECRAN then
-            ChangeEtat(tank, "haut")
-        end]]
     end
 
-    -- Changement etat Boss
-    for n = #enemys.lstBoss, 1, -1 do
-        local tank = enemys.lstBoss[n]
+    -- Changement etat tank Boss
+    function EtatTankBoss(tank)
         local direction = math.random(1, 2)
-        tank.dureeEtat = tank.dureeEtat - dt
+
         if tank.life <= 70 then
             tank.vitesse = 120
             if tank.life <= 40 then
                 tank.dureeEtat = 1
-                tank.vitesse = 0
-                if tank.etat == "haut" then
-                    if tank.y <= 50 then
-                        ChangeEtat(tank, "gauche")
-                    end
-                end
+                tank.vitesse = 200
                 if tank.etat == "gauche" then
                     if tank.x <= 50 then
                         ChangeEtat(tank, "droite")
@@ -221,10 +181,9 @@ function enemys.Update(dt)
                 end
             end
         end
-        print(tank.etat)
         if tank.etat == "bas" then
             tank.y = tank.y + tank.vitesse * dt
-            if tank.y >= HAUTEUR_ECRAN / 4 then
+            if tank.y >= HAUTEUR_ECRAN / 5 then
                 if tank.dureeEtat <= 0 then
                     if direction == 1 then
                         ChangeEtat(tank, "gauche")
@@ -255,13 +214,26 @@ function enemys.Update(dt)
                 end
             end
         end
+    end
+
+    -- Changement global etat tank
+    for n = #enemys.lstTank, 1, -1 do
+        local tank = enemys.lstTank[n]
+        tank.dureeEtat = tank.dureeEtat - dt
+        if tank.type == "TankVert" then
+            EtatTankVert(tank)
+        elseif tank.type == "TankBeige" then
+            EtatTankBeige(tank)
+        elseif tank.type == "TankBoss" then
+            EtatTankBoss(tank)
+        end
 
         -- Oblige les tanks à faire demi tour si ils sortent de l'écran.
-        if tank.x <= 20 then
+        if tank.x <= 30 then
             ChangeEtat(tank, "droite")
         elseif tank.x >= LARGEUR_ECRAN - 20 then
             ChangeEtat(tank, "gauche")
-        elseif tank.y <= 20 then
+        elseif tank.y <= 30 then
             ChangeEtat(tank, "bas")
         elseif tank.y >= HAUTEUR_ECRAN then
             ChangeEtat(tank, "haut")
@@ -269,7 +241,7 @@ function enemys.Update(dt)
     end
 end
 
-function enemys.draw()
+function enemys.Draw()
     for k, v in pairs(enemys.lstTank) do
         local r = math.pi / 2
         if v.etat == "gauche" then

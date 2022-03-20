@@ -13,15 +13,17 @@ local myPlayer = require("player")
 local bullets = require("bullet")
 local theEnemys = require("enemys")
 local globalParams = require("params")
-
--- Variables
-local mouseX = 0
-local mouseY = 0
+local background = require("terrain")
+local objetsDecor = require("decor")
 
 local timerMachineGun = 0
 
+-- curseur souri
+local mouseX = 0
+local mouseY = 0
+
 local Surge = {}
-Surge.timer = 2
+Surge.timer = 10
 Surge.nb = 1
 Surge.print = false
 Surge.pos = "droite"
@@ -33,6 +35,16 @@ function InitGame() -- Pour la remise à zéro de la partie
   myPlayer.y = HAUTEUR_ECRAN - 100
   myPlayer.angle = math.pi * 1.5
   myPlayer.angleCannon = math.pi * 1.5
+  myPlayer.life = myPlayer.maxLife
+
+  Surge.nb = 1
+  Surge.timer = 10
+  theEnemys.bossPhase1 = true
+  theEnemys.totalSpwan = 0
+
+  theEnemys.lstTank = {}
+  globalParams.lstSprites = {}
+  bullets.liste_tirs = {}
 end
 
 -----------------------------------------------------------------------------------------------------------
@@ -41,6 +53,8 @@ end
 function love.load()
   Ecran()
   InitGame()
+  background.Load()
+  objetsDecor.Load()
 end
 
 -----------------------------------------------------------------------------------------------------------
@@ -70,7 +84,6 @@ function UpdateJeu(dt)
   myPlayer.angleCannon = math.angle(myPlayer.x, myPlayer.y, mouseX, mouseY) --Donne l'angle du cannon
 
   myPlayer.update(dt)
-
   if timerMachineGun <= 0 then
     if love.mouse.isDown(2) then -- Tire une balle en direction du curseur
       local vx, vy
@@ -96,7 +109,8 @@ function UpdateJeu(dt)
   end
   timerMachineGun = timerMachineGun - 10 * (60 * dt)
 
-  bullets.update(dt)
+  bullets.Update(dt)
+  background.Update()
 
   -- Determine avec quels elements le joueur peut collisionner
   local next_x, next_y = myPlayer.GetNextPos(dt)
@@ -123,13 +137,18 @@ function UpdateJeu(dt)
 
   if Surge.nb == 1 and Surge.timer > 0 then
     Surge.print = true
+    if globalParams.sonPlay == true then
+      globalParams.sonVague1:play()
+      globalParams.sonPlay = false
+    end
   elseif Surge.nb == 1 then
+    globalParams.sonPlay = true
     Surge.print = false
     Surge.timer = 0
     if theEnemys.totalSpwan < 10 and theEnemys.timerSpawn >= theEnemys.frequSpawn then
       theEnemys.totalSpwan = theEnemys.totalSpwan + 1
       theEnemys.timerSpawn = 0
-      SpawnTank(globalParams.lstSprites, "TankVert")
+      SpawnTank(LARGEUR_ECRAN / 2, -100, 0.5, 0.5, "bas", 10, globalParams.lstSprites, "TankVert")
     elseif theEnemys.totalSpwan >= 10 then
       Surge.timer = 20
       Surge.nb = 2
@@ -138,17 +157,31 @@ function UpdateJeu(dt)
   end
   if Surge.nb == 2 and Surge.timer >= 0 and Surge.timer < 6 then
     Surge.print = true
+    if globalParams.sonPlay == true then
+      globalParams.sonVague2:play()
+      globalParams.sonPlay = false
+    end
   elseif Surge.nb == 2 and Surge.timer < 0 then
+    globalParams.sonPlay = true
     Surge.print = false
     Surge.timer = 0
     if theEnemys.totalSpwan < 10 and theEnemys.timerSpawn >= theEnemys.frequSpawn then
       theEnemys.totalSpwan = theEnemys.totalSpwan + 1
       theEnemys.timerSpawn = 0
       if Surge.pos == "droite" then
-        SpawnBeigeTank(LARGEUR_ECRAN + 10, HAUTEUR_ECRAN / 2, "gauche", globalParams.lstSprites)
+        SpawnTank(
+          LARGEUR_ECRAN + 10,
+          (HAUTEUR_ECRAN / 2) + 32,
+          0.5,
+          0.5,
+          "gauche",
+          10,
+          globalParams.lstSprites,
+          "TankBeige"
+        )
         Surge.pos = "gauche"
       else
-        SpawnBeigeTank(-10, HAUTEUR_ECRAN / 2, "droite", globalParams.lstSprites)
+        SpawnTank(-10, (HAUTEUR_ECRAN / 2) + 32, 0.5, 0.5, "droite", 10, globalParams.lstSprites, "TankBeige")
         Surge.pos = "droite"
       end
     elseif theEnemys.totalSpwan >= 10 then
@@ -160,12 +193,16 @@ function UpdateJeu(dt)
   end
   if Surge.nb == 3 and Surge.timer >= 0 and Surge.timer < 6 then
     Surge.print = true
+    if globalParams.sonPlay == true then
+      globalParams.sonBoss:play()
+      globalParams.sonPlay = false
+    end
   elseif Surge.nb == 3 and Surge.timer < 0 then
     Surge.print = false
     Surge.timer = 0
     if theEnemys.totalSpwan == 0 then
       theEnemys.totalSpwan = theEnemys.totalSpwan + 1
-      SpawnBoss(globalParams.lstSprites)
+      SpawnTank(LARGEUR_ECRAN / 2, -100, 1, 1, "bas", 100, globalParams.lstSprites, "TankBoss")
     end
   end
 
@@ -176,27 +213,62 @@ function UpdateJeu(dt)
       table.remove(globalParams.lstSprites, k)
     end
   end
+
+  objetsDecor.Update(dt)
 end
 
 function love.update(dt)
   if globalParams.pause == false then
-    UpdateJeu(dt)
-    theEnemys.Update(dt)
+    globalParams.Update()
+    if globalParams.ecran_courant == "jeu" then
+      UpdateJeu(dt)
+      theEnemys.Update(dt)
+    end
   end
 end
 
 -----------------------------------------------------------------------------------------------------------
 ------------------------------------------- DRAW ----------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------
-function love.draw()
-  bullets.draw()
-  myPlayer.draw()
-  theEnemys.draw()
+function DrawMenu()
+  love.graphics.draw(globalParams.IMG_MENU, 0, 0)
+end
+
+function DrawGameover()
+  love.graphics.draw(globalParams.IMG_GAMEOVER, 0, 0)
+end
+
+function DrawVictory()
+  love.graphics.draw(globalParams.img_VICTORY, 0, 0)
+end
+
+function DrawPlay()
+  background.Draw()
+  bullets.Draw()
+  myPlayer.Draw()
+  theEnemys.Draw()
+  objetsDecor.Draw()
   if Surge.print == true then
     love.graphics.print(math.floor(Surge.timer) .. " sec. avant la prochaine vague !", LARGEUR_ECRAN / 2 - 40, 50)
   end
   if Surge.print == true then
     love.graphics.print({{1, 0, 1}, "Vague" .. Surge.nb}, LARGEUR_ECRAN / 2, HAUTEUR_ECRAN / 2)
+  end
+end
+
+function love.draw()
+  -- Affiche l'ecran courant
+  if globalParams.ecran_courant == "jeu" then
+    DrawPlay()
+  elseif globalParams.ecran_courant == "menu" then
+    DrawMenu()
+  elseif globalParams.ecran_courant == "gameover" then
+    DrawGameover()
+  elseif globalParams.ecran_courant == "victoire" then
+    DrawVictory()
+  end
+  if globalParams.pause == true then
+    love.graphics.draw(globalParams.img_PAUSE, 0, 0)
   end
 
   -- Affiche les informations de degugage
@@ -208,16 +280,14 @@ function love.draw()
       myPlayer.y + 10
     )
     love.graphics.print("Angle: " .. myPlayer.angle, myPlayer.x + 30, myPlayer.y - 20)
+
     love.graphics.print("Nb de sprites: " .. #globalParams.lstSprites, 10, 10)
-    love.graphics.print("Nb de tanks vert: " .. #theEnemys.lstGreenTank, 10, 25)
+    love.graphics.print("Nb de tanks: " .. #theEnemys.lstTank, 10, 25)
     love.graphics.print("Nb de balles: " .. #bullets.liste_tirs, 10, 40)
     love.graphics.print("Vague d'ennemies n°" .. Surge.nb, 10, 55)
     love.graphics.print("Enemies crée: " .. theEnemys.totalSpwan, 10, 70)
     love.graphics.print("Timer vague: " .. Surge.timer, 10, 85)
     love.graphics.print("Timer spawn: " .. theEnemys.timerSpawn, 10, 100)
-    for k, v in pairs(theEnemys.lstGreenTank) do
-      love.graphics.print("Angle: " .. v.tourelleAngle, v.x + 20, v.y - 20)
-    end
   end
 end
 
@@ -233,23 +303,38 @@ function love.keypressed(key)
     globalParams.stats_debug = not globalParams.stats_debug
   end
   print(key)
+
+  -- Changement d'ecran via la touche ESPACE
+  if globalParams.ecran_courant == "jeu" then
+  elseif globalParams.ecran_courant == "menu" then
+    if key == "space" then
+      globalParams.ecran_courant = "jeu"
+    end
+  elseif globalParams.ecran_courant == "gameover" or globalParams.ecran_courant == "victoire" then
+    InitGame()
+    if key == "space" then
+      globalParams.ecran_courant = "menu"
+    end
+  end
 end
 
 function love.mousepressed(x, y, button)
   if globalParams.pause == false then
-    if button == 1 then -- Tire une balle en direction du curseur
-      local vx, vy
-      vx = 4 * math.cos(myPlayer.angleCannon)
-      vy = 4 * math.sin(myPlayer.angleCannon)
-      CreeTir(
-        myPlayer.x + vx * 2,
-        myPlayer.y + vy * 2,
-        myPlayer.angleCannon,
-        vx,
-        vy,
-        globalParams.lstSprites,
-        "ObusBleu"
-      )
+    if globalParams.ecran_courant == "jeu" then
+      if button == 1 then -- Tire une balle en direction du curseur
+        local vx, vy
+        vx = 4 * math.cos(myPlayer.angleCannon)
+        vy = 4 * math.sin(myPlayer.angleCannon)
+        CreeTir(
+          myPlayer.x + vx * 2,
+          myPlayer.y + vy * 2,
+          myPlayer.angleCannon,
+          vx,
+          vy,
+          globalParams.lstSprites,
+          "ObusBleu"
+        )
+      end
     end
   end
 end
