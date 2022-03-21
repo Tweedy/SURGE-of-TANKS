@@ -61,8 +61,7 @@ function player.rotate(pRadian)
 end
 
 function player.Draw()
-    love.graphics.print("Vie: " .. player.life, player.x - 25, player.y - 50)
-
+    love.graphics.print("Vie: " .. player.life, player.x - 30, player.y - 50)
     love.graphics.draw(
         imgPlayerTank,
         player.x,

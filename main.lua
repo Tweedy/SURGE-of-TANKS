@@ -23,9 +23,9 @@ local mouseX = 0
 local mouseY = 0
 
 local Surge = {}
-Surge.timer = 10
+Surge.timer = 5
+Surge.timerPlay = 5
 Surge.nb = 1
-Surge.print = false
 Surge.pos = "droite"
 
 --------------------------------------- FONCTIONS ---------------------------------------------------------
@@ -36,9 +36,10 @@ function InitGame() -- Pour la remise à zéro de la partie
   myPlayer.angle = math.pi * 1.5
   myPlayer.angleCannon = math.pi * 1.5
   myPlayer.life = myPlayer.maxLife
+  globalParams.sonPlay = true
 
   Surge.nb = 1
-  Surge.timer = 10
+  Surge.timer = 5
   theEnemys.bossPhase1 = true
   theEnemys.totalSpwan = 0
 
@@ -136,14 +137,12 @@ function UpdateJeu(dt)
   theEnemys.timerSpawn = theEnemys.timerSpawn + dt
 
   if Surge.nb == 1 and Surge.timer > 0 then
-    Surge.print = true
     if globalParams.sonPlay == true then
       globalParams.sonVague1:play()
       globalParams.sonPlay = false
     end
   elseif Surge.nb == 1 then
     globalParams.sonPlay = true
-    Surge.print = false
     Surge.timer = 0
     if theEnemys.totalSpwan < 10 and theEnemys.timerSpawn >= theEnemys.frequSpawn then
       theEnemys.totalSpwan = theEnemys.totalSpwan + 1
@@ -155,15 +154,13 @@ function UpdateJeu(dt)
       theEnemys.totalSpwan = 0
     end
   end
-  if Surge.nb == 2 and Surge.timer >= 0 and Surge.timer < 6 then
-    Surge.print = true
+  if Surge.nb == 2 and Surge.timer >= 0 and Surge.timer <= Surge.timerPlay then
     if globalParams.sonPlay == true then
       globalParams.sonVague2:play()
       globalParams.sonPlay = false
     end
   elseif Surge.nb == 2 and Surge.timer < 0 then
     globalParams.sonPlay = true
-    Surge.print = false
     Surge.timer = 0
     if theEnemys.totalSpwan < 10 and theEnemys.timerSpawn >= theEnemys.frequSpawn then
       theEnemys.totalSpwan = theEnemys.totalSpwan + 1
@@ -192,13 +189,11 @@ function UpdateJeu(dt)
     end
   end
   if Surge.nb == 3 and Surge.timer >= 0 and Surge.timer < 6 then
-    Surge.print = true
     if globalParams.sonPlay == true then
       globalParams.sonBoss:play()
       globalParams.sonPlay = false
     end
   elseif Surge.nb == 3 and Surge.timer < 0 then
-    Surge.print = false
     Surge.timer = 0
     if theEnemys.totalSpwan == 0 then
       theEnemys.totalSpwan = theEnemys.totalSpwan + 1
@@ -248,11 +243,29 @@ function DrawPlay()
   myPlayer.Draw()
   theEnemys.Draw()
   objetsDecor.Draw()
-  if Surge.print == true then
-    love.graphics.print(math.floor(Surge.timer) .. " sec. avant la prochaine vague !", LARGEUR_ECRAN / 2 - 40, 50)
+  if Surge.timer ~= 0 then
+    love.graphics.print(
+      {{1, 1, 1}, math.floor(Surge.timer) .. " sec. avant la prochaine vague !"},
+      LARGEUR_ECRAN / 2,
+      40,
+      0,
+      1,
+      1,
+      globalParams.textWidth / 2
+    )
   end
-  if Surge.print == true then
-    love.graphics.print({{1, 0, 1}, "Vague" .. Surge.nb}, LARGEUR_ECRAN / 2, HAUTEUR_ECRAN / 2)
+  if Surge.timer > 0 and Surge.timer <= Surge.timerPlay then
+    love.graphics.setFont(globalParams.FONT_TITRE)
+    love.graphics.print(
+      {{1, 0, 0}, "Vague " .. Surge.nb},
+      LARGEUR_ECRAN / 2,
+      HAUTEUR_ECRAN / 2 - 90,
+      0,
+      1,
+      1,
+      globalParams.titreWidth / 2
+    )
+    love.graphics.setFont(globalParams.FONT_TEXTE)
   end
 end
 
@@ -273,22 +286,26 @@ function love.draw()
 
   -- Affiche les informations de degugage
   if globalParams.stats_debug == true then
-    love.graphics.print("Vitesse: " .. myPlayer.speed, myPlayer.x + 30, myPlayer.y - 5)
+    love.graphics.print("Vitesse: " .. myPlayer.speed, myPlayer.x + 30, myPlayer.y - 5, 0, 0.5, 0.5)
     love.graphics.print(
       "X: " .. math.floor(myPlayer.x) .. ", Y: " .. math.floor(myPlayer.y),
       myPlayer.x + 30,
-      myPlayer.y + 10
+      myPlayer.y + 10,
+      0,
+      0.5,
+      0.5
     )
-    love.graphics.print("Angle: " .. myPlayer.angle, myPlayer.x + 30, myPlayer.y - 20)
+    love.graphics.print("Angle: " .. myPlayer.angle, myPlayer.x + 30, myPlayer.y - 20, 0, 0.5, 0.5)
 
-    love.graphics.print("Nb de sprites: " .. #globalParams.lstSprites, 10, 10)
-    love.graphics.print("Nb de tanks: " .. #theEnemys.lstTank, 10, 25)
-    love.graphics.print("Nb de balles: " .. #bullets.liste_tirs, 10, 40)
-    love.graphics.print("Vague d'ennemies n°" .. Surge.nb, 10, 55)
-    love.graphics.print("Enemies crée: " .. theEnemys.totalSpwan, 10, 70)
-    love.graphics.print("Timer vague: " .. Surge.timer, 10, 85)
-    love.graphics.print("Timer spawn: " .. theEnemys.timerSpawn, 10, 100)
+    love.graphics.print("Nb de sprites: " .. #globalParams.lstSprites, 10, 10, 0, 0.5, 0.5)
+    love.graphics.print("Nb de tanks: " .. #theEnemys.lstTank, 10, 25, 0, 0.5, 0.5)
+    love.graphics.print("Nb de balles: " .. #bullets.liste_tirs, 10, 40, 0, 0.5, 0.5)
+    love.graphics.print("Vague d'ennemies n°" .. Surge.nb, 10, 55, 0, 0.5, 0.5)
+    love.graphics.print("Enemies crée: " .. theEnemys.totalSpwan, 10, 70, 0, 0.5, 0.5)
+    love.graphics.print("Timer vague: " .. Surge.timer, 10, 85, 0, 0.5, 0.5)
+    love.graphics.print("Timer spawn: " .. theEnemys.timerSpawn, 10, 100, 0, 0.5, 0.5)
   end
+  globalParams.Draw()
 end
 
 -----------------------------------------------------------------------------------------------------------

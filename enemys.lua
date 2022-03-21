@@ -32,6 +32,11 @@ function SpawnTank(pX, pY, pScaleX, pScaleY, pEtat, pLife, pLstSprites, pType)
         tank.imageTourelle = love.graphics.newImage("images/Tanks/barrelRed_outline.png")
     end
 
+    tank.imgBar = love.graphics.newImage("images/Interface/red_bar.png")
+    tank.imgBarBack = love.graphics.newImage("images/Interface/red_bar_back.png")
+    tank.quad = nil
+    tank.quadBack = love.graphics.newQuad(0, 0, pLife * 4, 10, pLife * 4, 10)
+
     tank.x = pX
     tank.y = pY
     tank.scaleX = pScaleX
@@ -53,13 +58,15 @@ function ChangeEtat(pTank, pEtat)
 end
 
 function enemys.Update(dt)
-    -- Donne à la tourelle ennemie la position du joueur
     for k, v in pairs(enemys.lstTank) do
+        -- Donne à la tourelle ennemie la position du joueur
         if enemys.bossPhase1 == true then
             v.tourelleAngle = math.angle(v.x, v.y, myPlayer.x, myPlayer.y)
         else
             v.tourelleAngle = math.angle(0, v.y, 0, myPlayer.y)
         end
+        -- Donne la taille de la barre de vie du tank
+        v.quad = love.graphics.newQuad(0, 0, v.life * 4, 10, v.life * 4, 10)
     end
 
     -- Changement etat tank Vert
@@ -251,6 +258,9 @@ function enemys.Draw()
         elseif v.etat == "haut" then
             r = math.pi * 2
         end
+        --love.graphics.print("Vie: " .. v.life, v.x - 25, v.y - 40)
+        love.graphics.draw(v.imgBarBack, v.quadBack, v.x - 20, v.y - 40)
+        love.graphics.draw(v.imgBar, v.quad, v.x - 20, v.y - 40)
         love.graphics.draw(
             v.images[1],
             v.x,
@@ -271,7 +281,6 @@ function enemys.Draw()
             v.imageTourelle:getWidth() / 2,
             v.imageTourelle:getHeight()
         )
-        love.graphics.print("Vie: " .. v.life, v.x - 20, v.y - 40)
     end
 end
 return enemys

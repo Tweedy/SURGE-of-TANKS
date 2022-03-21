@@ -13,6 +13,12 @@ params.sonExplosion = love.audio.newSource("sons/explosion.ogg", "static")
 params.sonImpactPlayer = love.audio.newSource("sons/impact_player.ogg", "static")
 params.sonJeu = love.audio.newSource("sons/FreeMe.mp3", "stream")
 
+-- Fonts
+params.FONT_TITRE = love.graphics.newFont("fonts/stencil.ttf", 50)
+params.FONT_TEXTE = love.graphics.newFont("fonts/narrow.ttf", 18)
+params.titreWidth = params.FONT_TITRE:getWidth("VAGUE X")
+params.textWidth = params.FONT_TEXTE:getWidth("xx sec. avant la prochaine vague !")
+
 -- Ecran courant
 params.ecran_courant = "menu"
 params.controlPlayer = false
@@ -65,6 +71,10 @@ function params.Update()
   else
     params.sonJeu:setVolume(0.05)
   end
+end
+
+function params.Draw()
+  love.graphics.setFont(params.FONT_TEXTE)
 end
 
 function math.dist(x1, y1, x2, y2)
