@@ -1,11 +1,10 @@
-local bullet = {}
-bullet.liste_tirs = {}
-bullet.liste_enemyTirs = {}
-
 local globalParams = require("params")
 local theEnemys = require("enemys")
 local myPlayer = require("player")
 local moduleCreateSprites = require("createSprites")
+
+local bullet = {}
+bullet.liste_tirs = {}
 
 function CreeTir(pX, pY, pAngle, pVitesseX, pVitesseY, pLstSprites, pType)
     local tir = {}
@@ -162,8 +161,11 @@ function bullet.Draw()
                 "Balles direction: X: " ..
                     math.floor(v.x) ..
                         ", Y: " .. math.floor(v.y) .. ",  Vx: " .. math.floor(v.vx) .. ", Vy: " .. math.floor(v.vy),
-                600,
-                y + 15 * k
+                700,
+                y + 15 * k,
+                0,
+                0.5,
+                0.5
             )
         end
     end

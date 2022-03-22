@@ -1,10 +1,7 @@
-local player = {}
 local globalParams = require("params")
+local spawnItem = require("item")
 
-local imgPlayerTank = love.graphics.newImage("images/Tanks/tankBlue.png")
-local imgPlayerTracks = love.graphics.newImage("images/Tanks/tracksSmall.png")
-local imgPlayerCannon = love.graphics.newImage("images/Tanks/barrelBlue.png")
-local imgPlayerMachineGun = love.graphics.newImage("images/Tanks/machineGunBlue.png")
+local player = {}
 
 player.x = 0
 player.y = 0
@@ -21,8 +18,17 @@ player.maxLife = 100
 player.scaleX = 0.5
 player.scaleY = 0.5
 
-player.width = imgPlayerTank:getWidth()
-player.height = imgPlayerTank:getHeight()
+player.imgFullBar = love.graphics.newImage("images/Interface/blue_full_bar.png")
+player.imgEmptyBar = love.graphics.newImage("images/Interface/blue_empty_bar.png")
+player.fullQuad = nil
+player.emptyQuad = love.graphics.newQuad(0, 0, player.maxLife * 2, 30, player.maxLife * 2, 30)
+
+player.imgTank = love.graphics.newImage("images/Tanks/tankBlue.png")
+player.imgCannon = love.graphics.newImage("images/Tanks/barrelBlue.png")
+player.imgMachineGun = love.graphics.newImage("images/Tanks/machineGunBlue.png")
+
+player.width = player.imgTank:getWidth()
+player.height = player.imgTank:getHeight()
 
 function player.update(dt)
     player.x = player.x + (player.speed * dt) * math.cos(player.angle)
@@ -36,9 +42,26 @@ function player.update(dt)
         player.speed = player.speed + 100 * dt
     end
 
+    -- Redonne de la vie au joueur
+    if Collide(player, spawnItem) then
+        if spawnItem.visible == true then
+            print("touche")
+            player.life = player.life + 10
+        end
+        spawnItem.visible = false
+    end
+
+    -- Limite le nombre de point du joueur
+    if player.life > player.maxLife then
+        player.life = player.maxLife
+    end
+
     -- Donne et actualise la position des mitrailleuses
     player.mGunX = player.x - 14 * math.cos(player.angle - math.pi)
     player.mGunY = player.y - 14 * math.sin(player.angle - math.pi)
+
+    -- Donne la taille de la barre de vie
+    player.fullQuad = love.graphics.newQuad(0, 0, player.life * 2, 30, player.maxLife * 2, 30)
 end
 
 function player.GetNextPos(dt) -- Recupère la prochaine position du joueur
@@ -61,47 +84,39 @@ function player.rotate(pRadian)
 end
 
 function player.Draw()
-    love.graphics.print("Vie: " .. player.life, player.x - 30, player.y - 50)
+    love.graphics.draw(player.imgFullBar, player.fullQuad, 10, 10)
+    love.graphics.draw(player.imgEmptyBar, player.emptyQuad, 10, 10)
+    love.graphics.print("Vie du joueur: " .. player.life, 20, 16, 0, 0.75, 0.75)
     love.graphics.draw(
-        imgPlayerTank,
+        player.imgTank,
         player.x,
         player.y,
         player.angle - math.pi * 1.5,
         player.scaleX,
         player.scaleY,
-        imgPlayerTank:getWidth() / 2,
-        imgPlayerTank:getHeight() / 2
-    )
-    love.graphics.draw(
-        imgPlayerTracks,
-        player.x,
-        player.y,
-        player.angle - math.pi * 1.5,
-        0.5,
-        0.5,
-        imgPlayerTracks:getWidth() / 2,
-        imgPlayerTracks:getHeight() / 2
+        player.imgTank:getWidth() / 2,
+        player.imgTank:getHeight() / 2
     )
 
     love.graphics.draw(
-        imgPlayerMachineGun,
+        player.imgMachineGun,
         player.mGunX,
         player.mGunY,
         player.angle - math.pi * 1.5,
         0.5,
         0.5,
-        imgPlayerMachineGun:getWidth() / 2,
-        imgPlayerMachineGun:getHeight() / 2
+        player.imgMachineGun:getWidth() / 2,
+        player.imgMachineGun:getHeight() / 2
     )
     love.graphics.draw(
-        imgPlayerCannon,
+        player.imgCannon,
         player.x,
         player.y,
         player.angleCannon - math.pi * 1.5,
         0.5,
         0.5,
-        imgPlayerCannon:getWidth() / 2,
-        imgPlayerCannon:getHeight()
+        player.imgCannon:getWidth() / 2,
+        player.imgCannon:getHeight()
     )
 end
 

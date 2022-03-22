@@ -28,7 +28,6 @@ terrain.tileTextures = {}
 terrain.tileType = {}
 
 function terrain.Load()
-    print("texture")
     terrain.tileImage = love.graphics.newImage("images/Environment/tiles.png")
     local nbColumns = terrain.tileImage:getWidth() / terrain.map.TILE_WIDTH
     local nbLines = terrain.tileImage:getHeight() / terrain.map.TILE_HEIGHT
@@ -71,8 +70,6 @@ function terrain.Load()
     terrain.tileType[35] = "Route"
     terrain.tileType[23] = "Route"
     terrain.tileType[40] = "Route"
-
-    print("texture chargé")
 end
 
 function terrain.Update()

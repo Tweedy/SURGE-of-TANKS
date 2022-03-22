@@ -15,6 +15,7 @@ local theEnemys = require("enemys")
 local globalParams = require("params")
 local background = require("terrain")
 local objetsDecor = require("decor")
+local spawnItem = require("item")
 
 local timerMachineGun = 0
 
@@ -210,6 +211,7 @@ function UpdateJeu(dt)
   end
 
   objetsDecor.Update(dt)
+  spawnItem.Update()
 end
 
 function love.update(dt)
@@ -239,9 +241,10 @@ end
 
 function DrawPlay()
   background.Draw()
+  spawnItem.Draw()
   bullets.Draw()
-  myPlayer.Draw()
   theEnemys.Draw()
+  myPlayer.Draw()
   objetsDecor.Draw()
   if Surge.timer ~= 0 then
     love.graphics.print(
@@ -297,13 +300,13 @@ function love.draw()
     )
     love.graphics.print("Angle: " .. myPlayer.angle, myPlayer.x + 30, myPlayer.y - 20, 0, 0.5, 0.5)
 
-    love.graphics.print("Nb de sprites: " .. #globalParams.lstSprites, 10, 10, 0, 0.5, 0.5)
-    love.graphics.print("Nb de tanks: " .. #theEnemys.lstTank, 10, 25, 0, 0.5, 0.5)
-    love.graphics.print("Nb de balles: " .. #bullets.liste_tirs, 10, 40, 0, 0.5, 0.5)
-    love.graphics.print("Vague d'ennemies n°" .. Surge.nb, 10, 55, 0, 0.5, 0.5)
-    love.graphics.print("Enemies crée: " .. theEnemys.totalSpwan, 10, 70, 0, 0.5, 0.5)
-    love.graphics.print("Timer vague: " .. Surge.timer, 10, 85, 0, 0.5, 0.5)
-    love.graphics.print("Timer spawn: " .. theEnemys.timerSpawn, 10, 100, 0, 0.5, 0.5)
+    love.graphics.print("Nb de sprites: " .. #globalParams.lstSprites, 10, 50, 0, 0.75, 0.75)
+    love.graphics.print("Nb de tanks: " .. #theEnemys.lstTank, 10, 65, 0, 0.75, 0.75)
+    love.graphics.print("Nb de balles: " .. #bullets.liste_tirs, 10, 80, 0, 0.75, 0.75)
+    love.graphics.print("Vague d'ennemies n°" .. Surge.nb, 10, 95, 0, 0.75, 0.75)
+    love.graphics.print("Enemies crée: " .. theEnemys.totalSpwan, 10, 110, 0, 0.75, 0.75)
+    love.graphics.print("Timer vague: " .. Surge.timer, 10, 125, 0, 0.75, 0.75)
+    love.graphics.print("Timer spawn: " .. theEnemys.timerSpawn, 10, 140, 0, 0.75, 0.75)
   end
   globalParams.Draw()
 end

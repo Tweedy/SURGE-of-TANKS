@@ -32,10 +32,15 @@ function SpawnTank(pX, pY, pScaleX, pScaleY, pEtat, pLife, pLstSprites, pType)
         tank.imageTourelle = love.graphics.newImage("images/Tanks/barrelRed_outline.png")
     end
 
-    tank.imgBar = love.graphics.newImage("images/Interface/red_bar.png")
-    tank.imgBarBack = love.graphics.newImage("images/Interface/red_bar_back.png")
-    tank.quad = nil
-    tank.quadBack = love.graphics.newQuad(0, 0, pLife * 4, 10, pLife * 4, 10)
+    tank.imgFullBar = love.graphics.newImage("images/Interface/red_full_bar.png")
+    tank.imgEmptyBar = love.graphics.newImage("images/Interface/red_empty_bar.png")
+    tank.FullQuad = nil
+
+    if pType == "TankBoss" then
+        tank.EmptyQuad = love.graphics.newQuad(0, 0, pLife * 4, 34, pLife * 4, 34)
+    else
+        tank.EmptyQuad = love.graphics.newQuad(0, 0, pLife * 4, 10, pLife * 4, 10)
+    end
 
     tank.x = pX
     tank.y = pY
@@ -66,7 +71,11 @@ function enemys.Update(dt)
             v.tourelleAngle = math.angle(0, v.y, 0, myPlayer.y)
         end
         -- Donne la taille de la barre de vie du tank
-        v.quad = love.graphics.newQuad(0, 0, v.life * 4, 10, v.life * 4, 10)
+        if v.type == "TankBoss" then
+            v.FullQuad = love.graphics.newQuad(0, 0, v.life * 4, 34, v.life * 4, 34)
+        else
+            v.FullQuad = love.graphics.newQuad(0, 0, v.life * 4, 10, v.life * 4, 10)
+        end
     end
 
     -- Changement etat tank Vert
@@ -259,8 +268,17 @@ function enemys.Draw()
             r = math.pi * 2
         end
         --love.graphics.print("Vie: " .. v.life, v.x - 25, v.y - 40)
-        love.graphics.draw(v.imgBarBack, v.quadBack, v.x - 20, v.y - 40)
-        love.graphics.draw(v.imgBar, v.quad, v.x - 20, v.y - 40)
+        if v.type == "TankBoss" then
+            local titre = "BOSS FINAL"
+            local titreBossWidth = globalParams.FONT_TEXTE:getWidth(titre)
+
+            love.graphics.draw(v.imgFullBar, v.FullQuad, LARGEUR_ECRAN / 2 - 200, HAUTEUR_ECRAN - 50)
+            love.graphics.draw(v.imgEmptyBar, v.EmptyQuad, LARGEUR_ECRAN / 2 - 200, HAUTEUR_ECRAN - 50)
+            love.graphics.print(titre, LARGEUR_ECRAN / 2 - titreBossWidth / 2, HAUTEUR_ECRAN - 40)
+        else
+            love.graphics.draw(v.imgFullBar, v.FullQuad, v.x - 20, v.y - 40)
+            love.graphics.draw(v.imgEmptyBar, v.EmptyQuad, v.x - 20, v.y - 40)
+        end
         love.graphics.draw(
             v.images[1],
             v.x,

@@ -67,9 +67,9 @@ end
 function params.Update()
   params.sonJeu:play()
   if params.ecran_courant == "menu" or params.ecran_courant == "gameover" or params.ecran_courant == "victoire" then
-    params.sonJeu:setVolume(0.2)
+    params.sonJeu:setVolume(0.1)
   else
-    params.sonJeu:setVolume(0.05)
+    params.sonJeu:setVolume(0.04)
   end
 end
 
