@@ -153,14 +153,6 @@ end
 ------------------------------------------- DRAW ----------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------
 function player.Draw()
-    -- Barre de vie du joueur
-    love.graphics.draw(player.imgFullBar, player.fullQuad, 10, 10)
-    love.graphics.draw(player.imgEmptyBar, player.emptyQuad, 10, 10)
-    love.graphics.print("Vie du joueur: " .. player.life, 20, 16, 0, 0.75, 0.75)
-    if player.godMode == true then
-        love.graphics.print("God Mode Actif ", 220, 16, 0, 0.75, 0.75)
-    end
-
     -- Affichage du tank
     love.graphics.draw(
         player.imgTank,
@@ -193,6 +185,14 @@ function player.Draw()
         player.imgCannon:getWidth() / 2,
         player.imgCannon:getHeight()
     )
+
+    -- Barre de vie du joueur
+    love.graphics.draw(player.imgFullBar, player.fullQuad, 10, 10)
+    love.graphics.draw(player.imgEmptyBar, player.emptyQuad, 10, 10)
+    love.graphics.print("Vie du joueur: " .. player.life, 20, 16, 0, 0.75, 0.75)
+    if player.godMode == true then
+        love.graphics.print("God Mode Actif ", 220, 16, 0, 0.75, 0.75)
+    end
 end
 
 return player

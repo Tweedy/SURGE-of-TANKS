@@ -59,7 +59,7 @@ function SpawnTank(pX, pY, pScaleX, pScaleY, pEtat, pLife, pLstSprites, pType)
     tank.life = pLife
     tank.dureeEtat = math.random(1, 5)
     tank.vitesse = math.random(50, 100)
-    tank.timerTir = 0
+    tank.timerTir = 1000
     tank.timerPauseTir = false
     tank.tourelleAngle = 0
 
@@ -388,19 +388,6 @@ function enemys.Draw()
             r = math.pi * 2
         end
 
-        -- Barre de vie des ennemis
-        if v.type == "TankBoss" then
-            local titre = "BOSS FINAL"
-            local titreBossWidth = globalParams.FONT_TEXTE:getWidth(titre)
-
-            love.graphics.draw(v.imgFullBar, v.FullQuad, LARGEUR_ECRAN / 2 - 200, HAUTEUR_ECRAN - 50)
-            love.graphics.draw(v.imgEmptyBar, v.EmptyQuad, LARGEUR_ECRAN / 2 - 200, HAUTEUR_ECRAN - 50)
-            love.graphics.print(titre, LARGEUR_ECRAN / 2 - titreBossWidth / 2, HAUTEUR_ECRAN - 40)
-        else
-            love.graphics.draw(v.imgFullBar, v.FullQuad, v.x - 20, v.y - 40)
-            love.graphics.draw(v.imgEmptyBar, v.EmptyQuad, v.x - 20, v.y - 40)
-        end
-
         -- Affichage de l'ennemi
         love.graphics.draw(
             v.images[1],
@@ -422,6 +409,19 @@ function enemys.Draw()
             v.imageTourelle:getWidth() / 2,
             v.imageTourelle:getHeight()
         )
+
+        -- Barre de vie des ennemis
+        if v.type == "TankBoss" then
+            local titre = "BOSS FINAL"
+            local titreBossWidth = globalParams.FONT_TEXTE:getWidth(titre)
+
+            love.graphics.draw(v.imgFullBar, v.FullQuad, LARGEUR_ECRAN / 2 - 200, HAUTEUR_ECRAN - 50)
+            love.graphics.draw(v.imgEmptyBar, v.EmptyQuad, LARGEUR_ECRAN / 2 - 200, HAUTEUR_ECRAN - 50)
+            love.graphics.print(titre, LARGEUR_ECRAN / 2 - titreBossWidth / 2, HAUTEUR_ECRAN - 40)
+        else
+            love.graphics.draw(v.imgFullBar, v.FullQuad, v.x - 20, v.y - 40)
+            love.graphics.draw(v.imgEmptyBar, v.EmptyQuad, v.x - 20, v.y - 40)
+        end
     end
 end
 return enemys

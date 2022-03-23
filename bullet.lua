@@ -68,7 +68,6 @@ function bullet.Update(dt)
             local tank = theEnemys.lstTank[kTank]
             for kSprite = #globalParams.lstSprites, 1, -1 do
                 local sprite = globalParams.lstSprites[kSprite]
-
                 if tir.type == "ObusBleu" or tir.type == "BallesBleu" then
                     -- Supprime les ennemies et les balles si il y a eu collision
                     if Collide(tir, tank) then
