@@ -17,6 +17,8 @@ enemys.Surge.timerPlay = 5
 enemys.Surge.nb = 1
 enemys.Surge.pos = "droite"
 
+---------------------------------------- FONCTIONS --------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
 function SpawnTank(pX, pY, pScaleX, pScaleY, pEtat, pLife, pLstSprites, pType)
     local tank = {}
     local image = ""
@@ -69,6 +71,9 @@ function ChangeEtat(pTank, pEtat)
     pTank.dureeEtat = math.random(1, 2)
 end
 
+-----------------------------------------------------------------------------------------------------------
+------------------------------------------ UPDATE ---------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
 function enemys.Update(dt)
     for k, v in pairs(enemys.lstTank) do
         -- Donne à la tourelle ennemie la position du joueur
@@ -264,11 +269,13 @@ function enemys.Update(dt)
     end
 end
 
+-------------------------------------- VAGUE D'ENNEMIS ----------------------------------------------------
 function enemys.SurgeEnemy(dt)
-    --Fait aparaitre les ennemies par vague
+    --Fait aparaitre les ennemies par vague en fonction du timer
     enemys.Surge.timer = enemys.Surge.timer - 1 * dt
     enemys.timerSpawn = enemys.timerSpawn + dt
 
+    -- Premiere vague
     if enemys.Surge.nb == 1 and enemys.Surge.timer > 0 then
         if globalParams.sonPlay == true then
             globalParams.sonVague1:play()
@@ -287,6 +294,8 @@ function enemys.SurgeEnemy(dt)
             enemys.totalSpwan = 0
         end
     end
+
+    -- Seconde vague
     if enemys.Surge.nb == 2 and enemys.Surge.timer >= 0 and enemys.Surge.timer <= enemys.Surge.timerPlay then
         if globalParams.sonPlay == true then
             globalParams.sonVague2:play()
@@ -321,6 +330,8 @@ function enemys.SurgeEnemy(dt)
             enemys.timerSpawn = 0
         end
     end
+
+    -- Boss final
     if enemys.Surge.nb == 3 and enemys.Surge.timer >= 0 and enemys.Surge.timer < 6 then
         if globalParams.sonPlay == true then
             globalParams.sonBoss:play()
@@ -335,8 +346,39 @@ function enemys.SurgeEnemy(dt)
     end
 end
 
+-----------------------------------------------------------------------------------------------------------
+------------------------------------------- DRAW ----------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
+function enemys.SurgeDraw() -- Affiche le decompte avant la prochaine vague
+    if enemys.Surge.timer ~= 0 then
+        love.graphics.print(
+            {{1, 1, 1}, math.floor(enemys.Surge.timer) .. " sec. avant la prochaine vague !"},
+            LARGEUR_ECRAN / 2,
+            40,
+            0,
+            1,
+            1,
+            globalParams.textWidth / 2
+        )
+    end
+    if enemys.Surge.timer > 0 and enemys.Surge.timer <= enemys.Surge.timerPlay then
+        love.graphics.setFont(globalParams.FONT_TITRE)
+        love.graphics.print(
+            {{1, 0, 0}, "Vague " .. enemys.Surge.nb},
+            LARGEUR_ECRAN / 2,
+            HAUTEUR_ECRAN / 2 - 90,
+            0,
+            1,
+            1,
+            globalParams.titreWidth / 2
+        )
+        love.graphics.setFont(globalParams.FONT_TEXTE)
+    end
+end
+
 function enemys.Draw()
     for k, v in pairs(enemys.lstTank) do
+        -- Change l'angle de l'image en fonction de la direction du tank
         local r = math.pi / 2
         if v.etat == "gauche" then
             r = math.pi * 3.5
@@ -345,7 +387,8 @@ function enemys.Draw()
         elseif v.etat == "haut" then
             r = math.pi * 2
         end
-        --love.graphics.print("Vie: " .. v.life, v.x - 25, v.y - 40)
+
+        -- Barre de vie des ennemis
         if v.type == "TankBoss" then
             local titre = "BOSS FINAL"
             local titreBossWidth = globalParams.FONT_TEXTE:getWidth(titre)
@@ -357,6 +400,8 @@ function enemys.Draw()
             love.graphics.draw(v.imgFullBar, v.FullQuad, v.x - 20, v.y - 40)
             love.graphics.draw(v.imgEmptyBar, v.EmptyQuad, v.x - 20, v.y - 40)
         end
+
+        -- Affichage de l'ennemi
         love.graphics.draw(
             v.images[1],
             v.x,

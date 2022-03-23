@@ -1,11 +1,12 @@
 local globalParams = require("params")
 local theEnemys = require("enemys")
 local myPlayer = require("player")
-local moduleCreateSprites = require("createSprites")
 
 local bullet = {}
 bullet.liste_tirs = {}
 
+---------------------------------------- FONCTIONS --------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
 function CreeTir(pX, pY, pAngle, pVitesseX, pVitesseY, pLstSprites, pType)
     local tir = {}
     local image = ""
@@ -46,6 +47,9 @@ function CreeTir(pX, pY, pAngle, pVitesseX, pVitesseY, pLstSprites, pType)
     table.insert(bullet.liste_tirs, tir)
 end
 
+-----------------------------------------------------------------------------------------------------------
+------------------------------------------ UPDATE ---------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
 function bullet.Update(dt)
     -- Supprime les tirs qui depasse de la zone de jeu
     for kTir = #bullet.liste_tirs, 1, -1 do
@@ -102,16 +106,13 @@ function bullet.Update(dt)
                             end
                         end
                     end
-                    if myPlayer.life <= 0 then
-                        myPlayer.life = 0
-                        globalParams.sonDefaite:play()
-                        globalParams.ecran_courant = "gameover"
-                    end
+                    myPlayer.GameOver()
                 end
             end
         end
     end
 
+    -- permet aux ennemis de tirer des balles en rapport avec leur couleur
     for k, v in pairs(theEnemys.lstTank) do
         if v.timerTir <= 0 then
             v.timerTir = math.random(400, 700)
@@ -141,7 +142,10 @@ function bullet.Update(dt)
     end
 end
 
-function bullet.Draw()
+-----------------------------------------------------------------------------------------------------------
+------------------------------------------- DRAW ----------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
+function bullet.Draw() -- Affichage des balles
     local y = 1
     for k, v in pairs(bullet.liste_tirs) do
         love.graphics.draw(
@@ -154,20 +158,6 @@ function bullet.Draw()
             v.width / 2,
             v.height / 2
         )
-
-        -- Affiche les informations de degugage
-        if globalParams.stats_debug == true then
-            love.graphics.print(
-                "Balles direction: X: " ..
-                    math.floor(v.x) ..
-                        ", Y: " .. math.floor(v.y) .. ",  Vx: " .. math.floor(v.vx) .. ", Vy: " .. math.floor(v.vy),
-                700,
-                y + 15 * k,
-                0,
-                0.5,
-                0.5
-            )
-        end
     end
 end
 

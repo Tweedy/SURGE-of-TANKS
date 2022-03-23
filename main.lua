@@ -1,3 +1,12 @@
+--[[
+   _____ _    _ _____   _____ ______          __   _______       _   _ _  __ _____ 
+  / ____| |  | |  __ \ / ____|  ____|        / _| |__   __|/\   | \ | | |/ // ____|
+ | (___ | |  | | |__) | |  __| |__      ___ | |_     | |  /  \  |  \| | ' /| (___  
+  \___ \| |  | |  _  /| | |_ |  __|    / _ \|  _|    | | / /\ \ | . ` |  <  \___ \ 
+  ____) | |__| | | \ \| |__| | |____  | (_) | |      | |/ ____ \| |\  | . \ ____) |
+ |_____/ \____/|_|  \_\\_____|______|  \___/|_|      |_/_/    \_\_| \_|_|\_\_____/                                                                                                                                                                   
+
+ --]]
 -----------------------------------------------------------------------------------------------------------
 -- Cette ligne permet d'afficher des traces dans la console pendant l'éxécution
 io.stdout:setvbuf("no")
@@ -16,12 +25,16 @@ local globalParams = require("params")
 local background = require("terrain")
 local objetsDecor = require("decor")
 local spawnItem = require("item")
+local moduleSprites = require("createSprites")
 
 -- Curseur souris
 local mouseX = 0
 local mouseY = 0
 
 --------------------------------------- FONCTIONS ---------------------------------------------------------
+function math.dist(x1, y1, x2, y2) -- Renvoie la distance entre deux points.
+  return ((x2 - x1) ^ 2 + (y2 - y1) ^ 2) ^ 0.5
+end
 
 -- Renvoie l'angle entre deux vecteurs ayant la même origine.
 function math.angle(x1, y1, x2, y2)
@@ -39,12 +52,12 @@ function Collide(a1, a2)
     return false
   end
   if a2 == spawnItem then
-    -- Adapate la collision aux items
+    -- Adapte la collision aux items
     if a1.x < a2.x + a2L and a1.x + a1L > a2.x and a1.y < a2.y + a2H and a1.y + a1H > a2.y then
       return true
     end
   else
-    -- Adapate la collision aux tirs
+    -- Adapte la collision aux tirs
     if
       a1.x - (a1L / 2) < a2.x - (a2L / 2) + a2L and a1.x + a1L > a2.x - (a2L / 2) and a1.y < a2.y + a2H - (a2H / 2) and
         a1.y + a1H > a2.y - (a2H / 2)
@@ -86,7 +99,7 @@ end
 ------------------------------------------ UPDATE ---------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------
 function UpdateJeu(dt)
-  --dt = math.min(dt, 1 / 60)
+  dt = math.min(dt, 1 / 60) -- Limite le delta-time à 1/60e de sec max
 
   ---------------------------------- CONTROL DU JOUEUR ----------------------------------------------------
   if love.keyboard.isDown("d") then
@@ -101,30 +114,21 @@ function UpdateJeu(dt)
   end
 
   love.mouse.isVisible()
-  function love.mousemoved(pX, pY) -- Donne la position du curseur au canon du tank joueur
+  function love.mousemoved(pX, pY) -- Donne la position du curseur
     mouseX = pX
     mouseY = pY
   end
 
   myPlayer.angleCannon = math.angle(myPlayer.x, myPlayer.y, mouseX, mouseY) --Donne l'angle du cannon
 
-  myPlayer.update(dt)
-
+  myPlayer.Update(dt)
   bullets.Update(dt)
   background.Update()
-
   theEnemys.SurgeEnemy(dt)
-
-  -- Supprime les sprites qui ne sont pas affiché à l'ecran
-  for k = #globalParams.lstSprites, 1, -1 do
-    local sprite = globalParams.lstSprites[k]
-    if sprite.y <= 0 or sprite.y >= HAUTEUR_ECRAN or sprite.x <= 0 or sprite.x >= LARGEUR_ECRAN then
-      table.remove(globalParams.lstSprites, k)
-    end
-  end
-
+  moduleSprites.SupprSprite(dt)
   objetsDecor.Update(dt)
   spawnItem.Update()
+  theEnemys.Update(dt)
 end
 
 function love.update(dt)
@@ -132,7 +136,6 @@ function love.update(dt)
     globalParams.Update()
     if globalParams.ecran_courant == "jeu" then
       UpdateJeu(dt)
-      theEnemys.Update(dt)
     end
   end
 end
@@ -159,30 +162,7 @@ function DrawPlay()
   theEnemys.Draw()
   myPlayer.Draw()
   objetsDecor.Draw()
-  if theEnemys.Surge.timer ~= 0 then
-    love.graphics.print(
-      {{1, 1, 1}, math.floor(theEnemys.Surge.timer) .. " sec. avant la prochaine vague !"},
-      LARGEUR_ECRAN / 2,
-      40,
-      0,
-      1,
-      1,
-      globalParams.textWidth / 2
-    )
-  end
-  if theEnemys.Surge.timer > 0 and theEnemys.Surge.timer <= theEnemys.Surge.timerPlay then
-    love.graphics.setFont(globalParams.FONT_TITRE)
-    love.graphics.print(
-      {{1, 0, 0}, "Vague " .. theEnemys.Surge.nb},
-      LARGEUR_ECRAN / 2,
-      HAUTEUR_ECRAN / 2 - 90,
-      0,
-      1,
-      1,
-      globalParams.titreWidth / 2
-    )
-    love.graphics.setFont(globalParams.FONT_TEXTE)
-  end
+  theEnemys.SurgeDraw()
 end
 
 function love.draw()
@@ -220,7 +200,24 @@ function love.draw()
     love.graphics.print("Enemies crée: " .. theEnemys.totalSpwan, 10, 110, 0, 0.75, 0.75)
     love.graphics.print("Timer vague: " .. theEnemys.Surge.timer, 10, 125, 0, 0.75, 0.75)
     love.graphics.print("Timer spawn: " .. theEnemys.timerSpawn, 10, 140, 0, 0.75, 0.75)
+
+    local y = 1
+    for k, v in pairs(bullets.liste_tirs) do
+      if globalParams.stats_debug == true then
+        love.graphics.print(
+          "Balles direction: X: " ..
+            math.floor(v.x) ..
+              ", Y: " .. math.floor(v.y) .. ",  Vx: " .. math.floor(v.vx) .. ", Vy: " .. math.floor(v.vy),
+          700,
+          y + 15 * k,
+          0,
+          0.5,
+          0.5
+        )
+      end
+    end
   end
+
   globalParams.Draw()
 end
 
@@ -230,6 +227,10 @@ end
 function love.keypressed(key)
   if key == "p" then
     globalParams.pause = not globalParams.pause
+  end
+
+  if key == "e" then
+    myPlayer.godMode = not myPlayer.godMode
   end
 
   if key == "a" then

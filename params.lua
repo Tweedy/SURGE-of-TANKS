@@ -31,10 +31,11 @@ params.img_PAUSE = love.graphics.newImage("images/Ecrans/pause.png")
 params.pause = false
 params.stats_debug = false
 
+-- Variable
 params.lstSprites = {}
 
------------------------------------------- FONCTIONS ---------------------------------------------------------
-
+---------------------------------------- FONCTIONS --------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
 function Ecran()
   love.window.setMode(1024, 768)
   love.window.setTitle("SURGE of TANKS - Projet 1 Gamecodeur")
@@ -43,7 +44,10 @@ function Ecran()
   HAUTEUR_ECRAN = love.graphics.getHeight()
 end
 
-function params.Update()
+-----------------------------------------------------------------------------------------------------------
+------------------------------------------ UPDATE ---------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
+function params.Update(dt)
   params.sonJeu:play()
   if params.ecran_courant == "menu" or params.ecran_courant == "gameover" or params.ecran_courant == "victoire" then
     params.sonJeu:setVolume(0.1)
@@ -52,12 +56,11 @@ function params.Update()
   end
 end
 
+-----------------------------------------------------------------------------------------------------------
+------------------------------------------- DRAW ----------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
 function params.Draw()
   love.graphics.setFont(params.FONT_TEXTE)
-end
-
-function math.dist(x1, y1, x2, y2)
-  return ((x2 - x1) ^ 2 + (y2 - y1) ^ 2) ^ 0.5
 end
 
 return params

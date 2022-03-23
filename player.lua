@@ -17,6 +17,7 @@ player.life = 100
 player.maxLife = 100
 player.scaleX = 0.5
 player.scaleY = 0.5
+player.godMode = false
 
 player.imgFullBar = love.graphics.newImage("images/Interface/blue_full_bar.png")
 player.imgEmptyBar = love.graphics.newImage("images/Interface/blue_empty_bar.png")
@@ -31,7 +32,37 @@ player.timerMachineGun = 0
 player.width = player.imgTank:getWidth()
 player.height = player.imgTank:getHeight()
 
-function player.update(dt)
+---------------------------------------- FONCTIONS --------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
+function player.GameOver()
+    if player.life <= 0 then
+        player.life = 0
+        if player.godMode == false then
+            globalParams.sonDefaite:play()
+            globalParams.ecran_courant = "gameover"
+        end
+    end
+end
+
+-- Gere l'acceleration du joueur
+function player.accelerate(pAccel)
+    if player.speed < player.maxSpeed then
+        player.speed = player.speed + pAccel
+    end
+    if player.speed < -player.maxSpeed then
+        player.speed = player.speed - pAccel
+    end
+end
+
+-- Change l'angle du tank
+function player.rotate(pRadian)
+    player.angle = player.angle + pRadian
+end
+
+-----------------------------------------------------------------------------------------------------------
+------------------------------------------ UPDATE ---------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
+function player.Update(dt)
     player.x = player.x + (player.speed * dt) * math.cos(player.angle)
     player.y = player.y + (player.speed * dt) * math.sin(player.angle)
     if player.speed > 0 then -- Gère la deceleration du joueur
@@ -39,7 +70,7 @@ function player.update(dt)
         if player.speed < 0 then
             player.speed = 0
         end
-    elseif player.speed < 0 then
+    elseif player.speed < 0 then -- Gère l'acceleration
         player.speed = player.speed + 100 * dt
     end
 
@@ -51,7 +82,8 @@ function player.update(dt)
         end
         spawnItem.visible = false
     end
-    -- Limite le nombre de point du joueur
+
+    -- Donne le seuil maxi de vie du joueur
     if player.life > player.maxLife then
         player.life = player.maxLife
     end
@@ -110,29 +142,26 @@ function player.update(dt)
     end
 end
 
-function player.GetNextPos(dt) -- Recupère la prochaine position du joueur
+-- Recupère la prochaine position du joueur
+function player.GetNextPos(dt)
     player.nextPosX = player.x + (player.speed * dt) * math.cos(player.angle)
     player.nextPosY = player.y + (player.speed * dt) * math.sin(player.angle)
     return player.nextPosX, player.nextPosY
 end
 
-function player.accelerate(pAccel) -- Gere l'acceleration du joueur
-    if player.speed < player.maxSpeed then
-        player.speed = player.speed + pAccel
-    end
-    if player.speed < -player.maxSpeed then
-        player.speed = player.speed - pAccel
-    end
-end
-
-function player.rotate(pRadian)
-    player.angle = player.angle + pRadian
-end
-
+-----------------------------------------------------------------------------------------------------------
+------------------------------------------- DRAW ----------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
 function player.Draw()
+    -- Barre de vie du joueur
     love.graphics.draw(player.imgFullBar, player.fullQuad, 10, 10)
     love.graphics.draw(player.imgEmptyBar, player.emptyQuad, 10, 10)
     love.graphics.print("Vie du joueur: " .. player.life, 20, 16, 0, 0.75, 0.75)
+    if player.godMode == true then
+        love.graphics.print("God Mode Actif ", 220, 16, 0, 0.75, 0.75)
+    end
+
+    -- Affichage du tank
     love.graphics.draw(
         player.imgTank,
         player.x,

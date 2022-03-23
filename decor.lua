@@ -1,9 +1,11 @@
+local globalParams = require("params")
+
 local decor = {}
 
 decor.liste_decors = {}
 
-local globalParams = require("params")
-
+---------------------------------------- FONCTIONS --------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
 function CreeDecor(pX, pY, pLstSprites, pType)
     local objet = {}
     local image = ""
@@ -25,6 +27,9 @@ function CreeDecor(pX, pY, pLstSprites, pType)
     table.insert(decor.liste_decors, objet)
 end
 
+-----------------------------------------------------------------------------------------------------------
+------------------------------------------- LOAD ----------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
 function decor.Load()
     CreeDecor(160, 260, globalParams.lstSprites, "ArbreMarronGrand")
     CreeDecor(50, 220, globalParams.lstSprites, "ArbreMarronPetit")
@@ -35,7 +40,10 @@ function decor.Load()
     CreeDecor(200, 600, globalParams.lstSprites, "ArbreMarronGrand")
 end
 
-function decor.Update(dt)
+-----------------------------------------------------------------------------------------------------------
+------------------------------------------ UPDATE ---------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
+function decor.Update(dt) -- change l'image courante pour l'animation
     local i
     for i, v in ipairs(decor.liste_decors) do
         v.currentFrame = v.currentFrame + 0.08 * 60 * dt
@@ -45,6 +53,9 @@ function decor.Update(dt)
     end
 end
 
+-----------------------------------------------------------------------------------------------------------
+------------------------------------------- DRAW ----------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
 function decor.Draw()
     for k, v in ipairs(decor.liste_decors) do
         if v.visible == true then

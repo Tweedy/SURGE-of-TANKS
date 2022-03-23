@@ -1,7 +1,6 @@
-local terrain = {}
-
 local myPlayer = require("player")
-local objetsDecor = require("decor")
+
+local terrain = {}
 
 terrain.map = {}
 terrain.map.grid = {
@@ -27,6 +26,9 @@ terrain.tileImage = nil
 terrain.tileTextures = {}
 terrain.tileType = {}
 
+-----------------------------------------------------------------------------------------------------------
+------------------------------------------- LOAD ----------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
 function terrain.Load()
     terrain.tileImage = love.graphics.newImage("images/Environment/tiles.png")
     local nbColumns = terrain.tileImage:getWidth() / terrain.map.TILE_WIDTH
@@ -53,7 +55,6 @@ function terrain.Load()
 
     terrain.tileType[21] = "Sable"
     terrain.tileType[31] = "Sable"
-
     terrain.tileType[2] = "Route"
     terrain.tileType[3] = "Route"
     terrain.tileType[4] = "Route"
@@ -72,7 +73,10 @@ function terrain.Load()
     terrain.tileType[40] = "Route"
 end
 
-function terrain.Update()
+-----------------------------------------------------------------------------------------------------------
+------------------------------------------ UPDATE ---------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
+function terrain.Update() -- Change la vitesse de deplacement du joueur en fonction du type de tuile
     local col = math.floor(myPlayer.x / terrain.map.TILE_WIDTH) + 1
     local lig = math.floor(myPlayer.y / terrain.map.TILE_HEIGHT) + 1
     if col > 0 and col <= terrain.map.MAP_WIDTH and lig > 0 and lig <= terrain.map.MAP_HEIGHT then
@@ -99,9 +103,11 @@ function terrain.Update()
     end
 end
 
+-----------------------------------------------------------------------------------------------------------
+------------------------------------------- DRAW ----------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
 function terrain.Draw()
     local c, l
-
     for l = 1, terrain.map.MAP_HEIGHT do -- Liste des lignes
         for c = 1, terrain.map.MAP_WIDTH do -- Liste des colonnes
             local id_tile = terrain.map.grid[l][c]
