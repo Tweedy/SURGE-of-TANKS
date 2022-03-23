@@ -1,5 +1,3 @@
-local globalParams = require("params")
-
 local item = {}
 item.imgRepair = love.graphics.newImage("images/Environment/icone_repair.png")
 item.width = item.imgRepair:getWidth()

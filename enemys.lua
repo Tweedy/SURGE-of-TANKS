@@ -1,3 +1,6 @@
+local globalParams = require("params")
+local myPlayer = require("player")
+
 local enemys = {}
 enemys.color = nil
 enemys.lstTank = {}
@@ -7,8 +10,12 @@ enemys.frequSpawn = 2
 enemys.totalSpwan = 0
 enemys.bossPhase1 = true
 
-local globalParams = require("params")
-local myPlayer = require("player")
+-- Vague d'ennemis
+enemys.Surge = {}
+enemys.Surge.timer = 5
+enemys.Surge.timerPlay = 5
+enemys.Surge.nb = 1
+enemys.Surge.pos = "droite"
 
 function SpawnTank(pX, pY, pScaleX, pScaleY, pEtat, pLife, pLstSprites, pType)
     local tank = {}
@@ -253,6 +260,77 @@ function enemys.Update(dt)
             ChangeEtat(tank, "bas")
         elseif tank.y >= HAUTEUR_ECRAN then
             ChangeEtat(tank, "haut")
+        end
+    end
+end
+
+function enemys.SurgeEnemy(dt)
+    --Fait aparaitre les ennemies par vague
+    enemys.Surge.timer = enemys.Surge.timer - 1 * dt
+    enemys.timerSpawn = enemys.timerSpawn + dt
+
+    if enemys.Surge.nb == 1 and enemys.Surge.timer > 0 then
+        if globalParams.sonPlay == true then
+            globalParams.sonVague1:play()
+            globalParams.sonPlay = false
+        end
+    elseif enemys.Surge.nb == 1 then
+        globalParams.sonPlay = true
+        enemys.Surge.timer = 0
+        if enemys.totalSpwan < 10 and enemys.timerSpawn >= enemys.frequSpawn then
+            enemys.totalSpwan = enemys.totalSpwan + 1
+            enemys.timerSpawn = 0
+            SpawnTank(LARGEUR_ECRAN / 2, -100, 0.5, 0.5, "bas", 10, globalParams.lstSprites, "TankVert")
+        elseif enemys.totalSpwan >= 10 then
+            enemys.Surge.timer = 20
+            enemys.Surge.nb = 2
+            enemys.totalSpwan = 0
+        end
+    end
+    if enemys.Surge.nb == 2 and enemys.Surge.timer >= 0 and enemys.Surge.timer <= enemys.Surge.timerPlay then
+        if globalParams.sonPlay == true then
+            globalParams.sonVague2:play()
+            globalParams.sonPlay = false
+        end
+    elseif enemys.Surge.nb == 2 and enemys.Surge.timer < 0 then
+        globalParams.sonPlay = true
+        enemys.Surge.timer = 0
+        if enemys.totalSpwan < 10 and enemys.timerSpawn >= enemys.frequSpawn then
+            enemys.totalSpwan = enemys.totalSpwan + 1
+            enemys.timerSpawn = 0
+            if enemys.Surge.pos == "droite" then
+                SpawnTank(
+                    LARGEUR_ECRAN + 10,
+                    (HAUTEUR_ECRAN / 2) + 32,
+                    0.5,
+                    0.5,
+                    "gauche",
+                    10,
+                    globalParams.lstSprites,
+                    "TankBeige"
+                )
+                enemys.Surge.pos = "gauche"
+            else
+                SpawnTank(-10, (HAUTEUR_ECRAN / 2) + 32, 0.5, 0.5, "droite", 10, globalParams.lstSprites, "TankBeige")
+                enemys.Surge.pos = "droite"
+            end
+        elseif enemys.totalSpwan >= 10 then
+            enemys.Surge.timer = 20
+            enemys.Surge.nb = 3
+            enemys.totalSpwan = 0
+            enemys.timerSpawn = 0
+        end
+    end
+    if enemys.Surge.nb == 3 and enemys.Surge.timer >= 0 and enemys.Surge.timer < 6 then
+        if globalParams.sonPlay == true then
+            globalParams.sonBoss:play()
+            globalParams.sonPlay = false
+        end
+    elseif enemys.Surge.nb == 3 and enemys.Surge.timer < 0 then
+        enemys.Surge.timer = 0
+        if enemys.totalSpwan == 0 then
+            enemys.totalSpwan = enemys.totalSpwan + 1
+            SpawnTank(LARGEUR_ECRAN / 2, -100, 1, 1, "bas", 100, globalParams.lstSprites, "TankBoss")
         end
     end
 end

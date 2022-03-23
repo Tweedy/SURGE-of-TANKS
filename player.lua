@@ -26,6 +26,7 @@ player.emptyQuad = love.graphics.newQuad(0, 0, player.maxLife * 2, 30, player.ma
 player.imgTank = love.graphics.newImage("images/Tanks/tankBlue.png")
 player.imgCannon = love.graphics.newImage("images/Tanks/barrelBlue.png")
 player.imgMachineGun = love.graphics.newImage("images/Tanks/machineGunBlue.png")
+player.timerMachineGun = 0
 
 player.width = player.imgTank:getWidth()
 player.height = player.imgTank:getHeight()
@@ -50,7 +51,6 @@ function player.update(dt)
         end
         spawnItem.visible = false
     end
-
     -- Limite le nombre de point du joueur
     if player.life > player.maxLife then
         player.life = player.maxLife
@@ -62,6 +62,52 @@ function player.update(dt)
 
     -- Donne la taille de la barre de vie
     player.fullQuad = love.graphics.newQuad(0, 0, player.life * 2, 30, player.maxLife * 2, 30)
+
+    -- Permet le tir à la mitrailleuse
+    if player.timerMachineGun <= 0 then
+        if love.mouse.isDown(2) then -- Tire une balle dans la meme direction que le joueur
+            local vx, vy
+            vx = 10 * math.cos(player.angle)
+            vy = 10 * math.sin(player.angle)
+
+            local x1, y1 = 0, 0
+            local x2, y2 = 0, 0
+            x1 = player.x + 15 * math.cos(player.angle - math.pi / 4)
+            y1 = player.y + 15 * math.sin(player.angle - math.pi / 4)
+            x2 = player.x + 15 * math.cos(player.angle + math.pi / 4)
+            y2 = player.y + 15 * math.sin(player.angle + math.pi / 4)
+
+            CreeTir(x1, y1, player.angle, vx, vy, globalParams.lstSprites, "BallesBleu")
+            CreeTir(x2, y2, player.angle, vx, vy, globalParams.lstSprites, "BallesBleu")
+            player.timerMachineGun = 50
+            player.mGunX = player.x - 11 * math.cos(player.angle - math.pi)
+            player.mGunY = player.y - 11 * math.sin(player.angle - math.pi)
+        end
+    elseif player.timerMachineGun > 0 then
+        -- Change la position des mitrailleuses pour créer un effet de recul
+        player.mGunX = player.x - 14 * math.cos(player.angle - math.pi)
+        player.mGunY = player.y - 14 * math.sin(player.angle - math.pi)
+    end
+    player.timerMachineGun = player.timerMachineGun - 10 * (60 * dt)
+
+    -- Determine avec quels elements le joueur peut collisionner
+    local next_x, next_y = player.GetNextPos(dt)
+    if player.nextPosX > LARGEUR_ECRAN - 20 then
+        player.x = LARGEUR_ECRAN - 20
+        player.vitesse = 0
+    end
+    if player.nextPosX < 20 then
+        player.x = 20
+        player.vitesse = 0
+    end
+    if player.nextPosY > HAUTEUR_ECRAN - 20 then
+        player.y = HAUTEUR_ECRAN - 20
+        player.vitesse = 0
+    end
+    if player.nextPosY < 20 then
+        player.y = 20
+        player.vitesse = 0
+    end
 end
 
 function player.GetNextPos(dt) -- Recupère la prochaine position du joueur

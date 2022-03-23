@@ -17,20 +17,46 @@ local background = require("terrain")
 local objetsDecor = require("decor")
 local spawnItem = require("item")
 
-local timerMachineGun = 0
-
--- curseur souri
+-- Curseur souris
 local mouseX = 0
 local mouseY = 0
 
-local Surge = {}
-Surge.timer = 5
-Surge.timerPlay = 5
-Surge.nb = 1
-Surge.pos = "droite"
-
 --------------------------------------- FONCTIONS ---------------------------------------------------------
 
+-- Renvoie l'angle entre deux vecteurs ayant la même origine.
+function math.angle(x1, y1, x2, y2)
+  return math.atan2(y2 - y1, x2 - x1)
+end
+
+-- Permet de calculer le point de collision
+function Collide(a1, a2)
+  local a1L = a1.width * a1.scaleX
+  local a1H = a1.height * a1.scaleY
+  local a2L = a2.width * a2.scaleX
+  local a2H = a2.height * a2.scaleY
+
+  if a1 == a2 then
+    return false
+  end
+  if a2 == spawnItem then
+    -- Adapate la collision aux items
+    if a1.x < a2.x + a2L and a1.x + a1L > a2.x and a1.y < a2.y + a2H and a1.y + a1H > a2.y then
+      return true
+    end
+  else
+    -- Adapate la collision aux tirs
+    if
+      a1.x - (a1L / 2) < a2.x - (a2L / 2) + a2L and a1.x + a1L > a2.x - (a2L / 2) and a1.y < a2.y + a2H - (a2H / 2) and
+        a1.y + a1H > a2.y - (a2H / 2)
+     then
+      return true
+    end
+  end
+end
+
+-----------------------------------------------------------------------------------------------------------
+------------------------------------------- LOAD ----------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
 function InitGame() -- Pour la remise à zéro de la partie
   myPlayer.x = LARGEUR_ECRAN / 2
   myPlayer.y = HAUTEUR_ECRAN - 100
@@ -39,8 +65,8 @@ function InitGame() -- Pour la remise à zéro de la partie
   myPlayer.life = myPlayer.maxLife
   globalParams.sonPlay = true
 
-  Surge.nb = 1
-  Surge.timer = 5
+  theEnemys.Surge.nb = 1
+  theEnemys.Surge.timer = 5
   theEnemys.bossPhase1 = true
   theEnemys.totalSpwan = 0
 
@@ -49,9 +75,6 @@ function InitGame() -- Pour la remise à zéro de la partie
   bullets.liste_tirs = {}
 end
 
------------------------------------------------------------------------------------------------------------
-------------------------------------------- LOAD ----------------------------------------------------------
------------------------------------------------------------------------------------------------------------
 function love.load()
   Ecran()
   InitGame()
@@ -63,7 +86,7 @@ end
 ------------------------------------------ UPDATE ---------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------
 function UpdateJeu(dt)
-  dt = math.min(dt, 1 / 60)
+  --dt = math.min(dt, 1 / 60)
 
   ---------------------------------- CONTROL DU JOUEUR ----------------------------------------------------
   if love.keyboard.isDown("d") then
@@ -86,121 +109,11 @@ function UpdateJeu(dt)
   myPlayer.angleCannon = math.angle(myPlayer.x, myPlayer.y, mouseX, mouseY) --Donne l'angle du cannon
 
   myPlayer.update(dt)
-  if timerMachineGun <= 0 then
-    if love.mouse.isDown(2) then -- Tire une balle en direction du curseur
-      local vx, vy
-      vx = 10 * math.cos(myPlayer.angle)
-      vy = 10 * math.sin(myPlayer.angle)
-
-      local x1, y1 = 0, 0
-      local x2, y2 = 0, 0
-      x1 = myPlayer.x + 15 * math.cos(myPlayer.angle - math.pi / 4)
-      y1 = myPlayer.y + 15 * math.sin(myPlayer.angle - math.pi / 4)
-      x2 = myPlayer.x + 15 * math.cos(myPlayer.angle + math.pi / 4)
-      y2 = myPlayer.y + 15 * math.sin(myPlayer.angle + math.pi / 4)
-
-      CreeTir(x1, y1, myPlayer.angle, vx, vy, globalParams.lstSprites, "BallesBleu")
-      CreeTir(x2, y2, myPlayer.angle, vx, vy, globalParams.lstSprites, "BallesBleu")
-      timerMachineGun = 50
-      myPlayer.mGunX = myPlayer.x - 11 * math.cos(myPlayer.angle - math.pi)
-      myPlayer.mGunY = myPlayer.y - 11 * math.sin(myPlayer.angle - math.pi)
-    end
-  elseif timerMachineGun > 0 then
-    myPlayer.mGunX = myPlayer.x - 14 * math.cos(myPlayer.angle - math.pi)
-    myPlayer.mGunY = myPlayer.y - 14 * math.sin(myPlayer.angle - math.pi)
-  end
-  timerMachineGun = timerMachineGun - 10 * (60 * dt)
 
   bullets.Update(dt)
   background.Update()
 
-  -- Determine avec quels elements le joueur peut collisionner
-  local next_x, next_y = myPlayer.GetNextPos(dt)
-  if myPlayer.nextPosX > LARGEUR_ECRAN - 20 then
-    myPlayer.x = LARGEUR_ECRAN - 20
-    myPlayer.vitesse = 0
-  end
-  if myPlayer.nextPosX < 20 then
-    myPlayer.x = 20
-    myPlayer.vitesse = 0
-  end
-  if myPlayer.nextPosY > HAUTEUR_ECRAN - 20 then
-    myPlayer.y = HAUTEUR_ECRAN - 20
-    myPlayer.vitesse = 0
-  end
-  if myPlayer.nextPosY < 20 then
-    myPlayer.y = 20
-    myPlayer.vitesse = 0
-  end
-
-  --Fait aparaitre les ennemies par vague
-  Surge.timer = Surge.timer - 1 * dt
-  theEnemys.timerSpawn = theEnemys.timerSpawn + dt
-
-  if Surge.nb == 1 and Surge.timer > 0 then
-    if globalParams.sonPlay == true then
-      globalParams.sonVague1:play()
-      globalParams.sonPlay = false
-    end
-  elseif Surge.nb == 1 then
-    globalParams.sonPlay = true
-    Surge.timer = 0
-    if theEnemys.totalSpwan < 10 and theEnemys.timerSpawn >= theEnemys.frequSpawn then
-      theEnemys.totalSpwan = theEnemys.totalSpwan + 1
-      theEnemys.timerSpawn = 0
-      SpawnTank(LARGEUR_ECRAN / 2, -100, 0.5, 0.5, "bas", 10, globalParams.lstSprites, "TankVert")
-    elseif theEnemys.totalSpwan >= 10 then
-      Surge.timer = 20
-      Surge.nb = 2
-      theEnemys.totalSpwan = 0
-    end
-  end
-  if Surge.nb == 2 and Surge.timer >= 0 and Surge.timer <= Surge.timerPlay then
-    if globalParams.sonPlay == true then
-      globalParams.sonVague2:play()
-      globalParams.sonPlay = false
-    end
-  elseif Surge.nb == 2 and Surge.timer < 0 then
-    globalParams.sonPlay = true
-    Surge.timer = 0
-    if theEnemys.totalSpwan < 10 and theEnemys.timerSpawn >= theEnemys.frequSpawn then
-      theEnemys.totalSpwan = theEnemys.totalSpwan + 1
-      theEnemys.timerSpawn = 0
-      if Surge.pos == "droite" then
-        SpawnTank(
-          LARGEUR_ECRAN + 10,
-          (HAUTEUR_ECRAN / 2) + 32,
-          0.5,
-          0.5,
-          "gauche",
-          10,
-          globalParams.lstSprites,
-          "TankBeige"
-        )
-        Surge.pos = "gauche"
-      else
-        SpawnTank(-10, (HAUTEUR_ECRAN / 2) + 32, 0.5, 0.5, "droite", 10, globalParams.lstSprites, "TankBeige")
-        Surge.pos = "droite"
-      end
-    elseif theEnemys.totalSpwan >= 10 then
-      Surge.timer = 20
-      Surge.nb = 3
-      theEnemys.totalSpwan = 0
-      theEnemys.timerSpawn = 0
-    end
-  end
-  if Surge.nb == 3 and Surge.timer >= 0 and Surge.timer < 6 then
-    if globalParams.sonPlay == true then
-      globalParams.sonBoss:play()
-      globalParams.sonPlay = false
-    end
-  elseif Surge.nb == 3 and Surge.timer < 0 then
-    Surge.timer = 0
-    if theEnemys.totalSpwan == 0 then
-      theEnemys.totalSpwan = theEnemys.totalSpwan + 1
-      SpawnTank(LARGEUR_ECRAN / 2, -100, 1, 1, "bas", 100, globalParams.lstSprites, "TankBoss")
-    end
-  end
+  theEnemys.SurgeEnemy(dt)
 
   -- Supprime les sprites qui ne sont pas affiché à l'ecran
   for k = #globalParams.lstSprites, 1, -1 do
@@ -246,9 +159,9 @@ function DrawPlay()
   theEnemys.Draw()
   myPlayer.Draw()
   objetsDecor.Draw()
-  if Surge.timer ~= 0 then
+  if theEnemys.Surge.timer ~= 0 then
     love.graphics.print(
-      {{1, 1, 1}, math.floor(Surge.timer) .. " sec. avant la prochaine vague !"},
+      {{1, 1, 1}, math.floor(theEnemys.Surge.timer) .. " sec. avant la prochaine vague !"},
       LARGEUR_ECRAN / 2,
       40,
       0,
@@ -257,10 +170,10 @@ function DrawPlay()
       globalParams.textWidth / 2
     )
   end
-  if Surge.timer > 0 and Surge.timer <= Surge.timerPlay then
+  if theEnemys.Surge.timer > 0 and theEnemys.Surge.timer <= theEnemys.Surge.timerPlay then
     love.graphics.setFont(globalParams.FONT_TITRE)
     love.graphics.print(
-      {{1, 0, 0}, "Vague " .. Surge.nb},
+      {{1, 0, 0}, "Vague " .. theEnemys.Surge.nb},
       LARGEUR_ECRAN / 2,
       HAUTEUR_ECRAN / 2 - 90,
       0,
@@ -303,9 +216,9 @@ function love.draw()
     love.graphics.print("Nb de sprites: " .. #globalParams.lstSprites, 10, 50, 0, 0.75, 0.75)
     love.graphics.print("Nb de tanks: " .. #theEnemys.lstTank, 10, 65, 0, 0.75, 0.75)
     love.graphics.print("Nb de balles: " .. #bullets.liste_tirs, 10, 80, 0, 0.75, 0.75)
-    love.graphics.print("Vague d'ennemies n°" .. Surge.nb, 10, 95, 0, 0.75, 0.75)
+    love.graphics.print("Vague d'ennemies n°" .. theEnemys.Surge.nb, 10, 95, 0, 0.75, 0.75)
     love.graphics.print("Enemies crée: " .. theEnemys.totalSpwan, 10, 110, 0, 0.75, 0.75)
-    love.graphics.print("Timer vague: " .. Surge.timer, 10, 125, 0, 0.75, 0.75)
+    love.graphics.print("Timer vague: " .. theEnemys.Surge.timer, 10, 125, 0, 0.75, 0.75)
     love.graphics.print("Timer spawn: " .. theEnemys.timerSpawn, 10, 140, 0, 0.75, 0.75)
   end
   globalParams.Draw()
