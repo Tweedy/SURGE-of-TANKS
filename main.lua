@@ -71,19 +71,16 @@ end
 ------------------------------------------- LOAD ----------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------
 function InitGame() -- Pour la remise à zéro de la partie
-  myPlayer.x = LARGEUR_ECRAN / 2
-  myPlayer.y = HAUTEUR_ECRAN - 100
-  myPlayer.angle = math.pi * 1.5
-  myPlayer.angleCannon = math.pi * 1.5
-  myPlayer.life = myPlayer.maxLife
   globalParams.sonPlay = true
+
+  myPlayer.InitPlayer()
 
   theEnemys.Surge.nb = 1
   theEnemys.Surge.timer = 5
   theEnemys.bossPhase1 = true
   theEnemys.totalSpwan = 0
-
   theEnemys.lstTank = {}
+
   globalParams.lstSprites = {}
   bullets.liste_tirs = {}
 end

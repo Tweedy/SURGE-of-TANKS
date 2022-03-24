@@ -93,8 +93,9 @@ function enemys.Update(dt)
     -- Changement etat tank Vert
     function EtatTankVert(tank)
         local dist = math.dist(tank.x, tank.y, myPlayer.x, myPlayer.y)
-        local rayDist = 100
+        local rayDist = 150
 
+        -- Si l'ennemi s'approche trop pret du tank, il change sa direction
         if dist <= rayDist then
             if tank.etat == "bas" then
                 tank.y = tank.y + tank.vitesse * dt
@@ -118,7 +119,7 @@ function enemys.Update(dt)
                     ChangeEtat(tank, "bas")
                 end
             end
-        else
+        else -- Il se deplace vers le milieu de la zone de jeu
             if tank.etat == "droite" then
                 tank.x = tank.x + tank.vitesse * dt
                 if tank.dureeEtat <= 0 then
@@ -157,6 +158,7 @@ function enemys.Update(dt)
 
     -- Changement etat tank Beige
     function EtatTankBeige(tank)
+        -- Les tanks tournent autour de l'écran dans le sens horaire
         if tank.etat == "bas" then
             tank.y = tank.y + tank.vitesse * dt
             if tank.y >= HAUTEUR_ECRAN - 40 then
@@ -192,7 +194,7 @@ function enemys.Update(dt)
     -- Changement etat tank Boss
     function EtatTankBoss(tank)
         local direction = math.random(1, 2)
-
+        -- Si la vie du tank baisse, il change sa vitesse et son deplacement
         if tank.life <= 70 then
             tank.vitesse = 120
             if tank.life <= 40 then
@@ -209,6 +211,7 @@ function enemys.Update(dt)
                 end
             end
         end
+        -- Si le boss est suffisament descendu, il se deplace aléatoirement en axe X
         if tank.etat == "bas" then
             tank.y = tank.y + tank.vitesse * dt
             if tank.y >= HAUTEUR_ECRAN / 5 then
@@ -220,8 +223,6 @@ function enemys.Update(dt)
                     end
                 end
             end
-        elseif tank.etat == "haut" then
-            tank.y = tank.y - tank.vitesse * dt
         end
         if tank.etat == "droite" then
             tank.x = tank.x + tank.vitesse * dt
@@ -284,11 +285,11 @@ function enemys.SurgeEnemy(dt)
     elseif enemys.Surge.nb == 1 then
         globalParams.sonPlay = true
         enemys.Surge.timer = 0
-        if enemys.totalSpwan < 10 and enemys.timerSpawn >= enemys.frequSpawn then
+        if enemys.totalSpwan < 8 and enemys.timerSpawn >= enemys.frequSpawn then
             enemys.totalSpwan = enemys.totalSpwan + 1
             enemys.timerSpawn = 0
             SpawnTank(LARGEUR_ECRAN / 2, -100, 0.5, 0.5, "bas", 10, globalParams.lstSprites, "TankVert")
-        elseif enemys.totalSpwan >= 10 then
+        elseif enemys.totalSpwan >= 8 then
             enemys.Surge.timer = 20
             enemys.Surge.nb = 2
             enemys.totalSpwan = 0

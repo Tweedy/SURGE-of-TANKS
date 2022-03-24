@@ -19,11 +19,13 @@ player.scaleX = 0.5
 player.scaleY = 0.5
 player.godMode = false
 
+-- Barre de vie du joueur
 player.imgFullBar = love.graphics.newImage("images/Interface/blue_full_bar.png")
 player.imgEmptyBar = love.graphics.newImage("images/Interface/blue_empty_bar.png")
 player.fullQuad = nil
 player.emptyQuad = love.graphics.newQuad(0, 0, player.maxLife * 2, 30, player.maxLife * 2, 30)
 
+-- Tank
 player.imgTank = love.graphics.newImage("images/Tanks/tankBlue.png")
 player.imgCannon = love.graphics.newImage("images/Tanks/barrelBlue.png")
 player.imgMachineGun = love.graphics.newImage("images/Tanks/machineGunBlue.png")
@@ -34,6 +36,14 @@ player.height = player.imgTank:getHeight()
 
 ---------------------------------------- FONCTIONS --------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------
+function player.InitPlayer()
+    player.x = LARGEUR_ECRAN / 2
+    player.y = HAUTEUR_ECRAN - 100
+    player.angle = math.pi * 1.5
+    player.angleCannon = math.pi * 1.5
+    player.life = player.maxLife
+end
+
 function player.GameOver()
     if player.life <= 0 then
         player.life = 0
